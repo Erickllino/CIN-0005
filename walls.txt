@@ -1,0 +1,2 @@
+vector<pair<Vector2,Vector2>> walls = {
+};

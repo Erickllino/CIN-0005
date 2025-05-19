@@ -1,0 +1,35 @@
+# Compilador e flags
+CC       := g++
+CFLAGS   := -I./include      # aponta para onde estão os .h
+LDFLAGS  := -L/usr/local/lib -lraylib -lm -lpthread -ldl
+
+# Diretórios
+SRC_DIR   := src
+BUILD_DIR := build
+
+# Busca todos os .cpp em src/
+SRCS      := $(wildcard $(SRC_DIR)/*.cpp)
+# Transforma main.cpp → build/main.o, player.cpp → build/player.o
+OBJS      := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+
+# Alvo final
+TARGET    := main.exe
+
+.PHONY: all clean
+
+all: $(BUILD_DIR) $(TARGET)
+
+# Linka todos os .o para gerar o executável
+$(TARGET): $(OBJS)
+	$(CC) $^ -o $@ $(LDFLAGS)
+
+# Regra genérica: compila cada .cpp em seu .o dentro de build/
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+# Garante que o diretório build/ exista
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+clean:
+	rm -rf $(BUILD_DIR) $(TARGET)
