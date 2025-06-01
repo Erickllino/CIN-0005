@@ -10,14 +10,14 @@ private:
 
     
 public:
-    player(int x, int y, int radius);
+    player(float x,float y, int radius);
     int radius = 10;
-    int x, y;
-    int vx, vy;
+    float x, y;
+    float vx, vy;
     void draw();
     void move();
-    void change_vx(int dx);
-    void change_vy(int dy);
+    void change_vx(float dx);
+    void change_vy(float dy);
 };
 
 #endif

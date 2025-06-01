@@ -2,8 +2,8 @@
 #include "player.h"
 #include "game.h"
 
-int screenWidth = 800;
-int screenHeight = 600;
+float screenWidth = 800.0;
+float screenHeight = 600.0;
 
 
 int main() {
@@ -11,7 +11,7 @@ int main() {
   InitWindow(screenWidth, screenHeight, "raylib basic window");
   SetTargetFPS(120);
   Game game(screenWidth, screenHeight);
-  player p(screenWidth/2, screenHeight/2, 10);
+  player p((float) screenWidth/2,(float) screenHeight/2, 10);
 
   while (!WindowShouldClose()) {
     

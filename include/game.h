@@ -15,10 +15,10 @@ class Game {
 private:
 
 public:
-    Game(int screenWidth, int screenHeight);
+    Game(float screenWidth, float screenHeight);
     
-    int screenWidth = 800;
-    int screenHeight = 600;
+    float screenWidth = 800;
+    float screenHeight = 600;
 
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p1_walls;

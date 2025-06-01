@@ -1,7 +1,7 @@
 #include "player.h"
 #include <raylib.h>
 
-player::player(int x, int y, int radius)
+player::player(float x, float y, int radius)
     : x(x), y(y), radius(radius), vx(0), vy(0) {}
 
 void player::draw() {
@@ -14,10 +14,10 @@ void player::move() {
     y += vy;
 }
 
-void player::change_vx(int dx) {
-    vx = dx;
+void player::change_vx(float dx) {
+    vx += dx;
 }
 
-void player::change_vy(int dy) {
-    vy = dy;
+void player::change_vy(float dy) {
+    vy += dy;
 }
