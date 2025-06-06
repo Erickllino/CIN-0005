@@ -89,14 +89,14 @@ void Game::play_step(player &p) {
     ClearBackground(BLACK);
 
     // Input
-    if (IsKeyDown(KEY_UP))    p.change_vy(-0.1f);
-    if (IsKeyDown(KEY_DOWN))  p.change_vy(0.1f);
-    if (IsKeyDown(KEY_LEFT))  p.change_vx(-0.1f);
-    if (IsKeyDown(KEY_RIGHT)) p.change_vx(0.1f);
-    if (IsKeyPressed(KEY_SPACE)) {
-        float breakForce = 0.5f;
-        p.vx = p.vx * breakForce;
-        p.vy = p.vy * breakForce;
+    if (IsKeyDown(KEY_UP))    p.acelerate_y(-0.1f);
+    if (IsKeyDown(KEY_DOWN))  p.acelerate_y(0.1f);
+    if (IsKeyDown(KEY_LEFT))  p.acelerate_x(-0.1f);
+    if (IsKeyDown(KEY_RIGHT)) p.acelerate_x(0.1f);
+    if (IsKeyDown(KEY_SPACE)) {
+        float breakForce = 0.05;
+        p.vx -= p.vx * breakForce;
+        p.vy -= p.vy * breakForce;
     }
     // Desenha obstáculos
     for (auto &seg : p1_walls) {
@@ -119,7 +119,7 @@ void Game::play_step(player &p) {
         }
     }
 
-    // Verifica bordas da tela
+    // Verifica bordas da tela para evitar sair da tela mesmo com colisão
     if (pos.x - r < 0) {
         pos.x = r;
         vel.x *= -1;

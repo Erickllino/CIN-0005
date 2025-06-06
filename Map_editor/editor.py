@@ -45,7 +45,7 @@ def main():
             cv2.line(disp, p0, p1, (0,0,255), 2)
         cv2.imshow('map editor', disp)
         key = cv2.waitKey(1) & 0xFF
-        if key == ord('s'):
+        if key == ord('q'):
             break
 
     cv2.destroyAllWindows()

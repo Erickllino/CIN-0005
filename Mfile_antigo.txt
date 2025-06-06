@@ -1,7 +1,7 @@
 # Compilador e flags
 CC       := g++
-CFLAGS   := -I./include -I./extenal/raylib/src     # aponta para onde estão os .h
-LDFLAGS  := -Lexternal/raylib/src -lraylib -lm -lpthread -ldl
+CFLAGS   := -I./include      # aponta para onde estão os .h
+LDFLAGS  := -L/usr/local/lib -lraylib -lm -lpthread -ldl
 
 # Diretórios
 SRC_DIR   := src

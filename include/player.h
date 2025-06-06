@@ -16,8 +16,8 @@ public:
     float vx, vy;
     void draw();
     void move();
-    void change_vx(float dx);
-    void change_vy(float dy);
+    void acelerate_x(float dx);
+    void acelerate_y(float dy);
 };
 
 #endif

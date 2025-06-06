@@ -14,10 +14,10 @@ void player::move() {
     y += vy;
 }
 
-void player::change_vx(float dx) {
+void player::acelerate_x(float dx) {
     vx += dx;
 }
 
-void player::change_vy(float dy) {
+void player::acelerate_y(float dy) {
     vy += dy;
 }
