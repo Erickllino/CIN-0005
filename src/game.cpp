@@ -103,40 +103,85 @@ bool CheckCollisionCircleLine(Vector2 center, float radius,
     }
     return false;
 }
-
+int i = 0;
 // Função de menu (placeholder)
 Game::GameState Game::menu(GameState game_state) {
-    while (game_state == MENU) {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        DrawText("Menu Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 200, 20, WHITE);
-        
-        // Desenha o botão "New Game"
-        
-        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, GRAY);
-        DrawText("New Game", screenWidth / 2 - 100, screenHeight / 2 - 130, 20, RED);
-        
-        DrawText("Press ESC to exit", screenWidth / 2 - 100, screenHeight - 20 , 20, WHITE);
-        // Verifica se o mouse foi clicadod
 
-        Vector2 mousePos = GetMousePosition();
-        if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
-            mousePos.y >= screenHeight / 2 - 150 && mousePos.y <= screenHeight / 2 - 100) {
-            
-            DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
-            DrawText("New Game", screenWidth / 2 - 100, screenHeight / 2 - 130, 20, RED);  
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-                return PLAYING; // Muda para o estado de jogo
-            }
-            
-        } else if (IsKeyPressed(KEY_ESCAPE)) {
-            return GAME_OVER; // Sai do menu
-        }
-        EndDrawing();
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Menu Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 200, 20, WHITE);
+    
+    // Desenha o botão "New Game"
+    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, GRAY);
+    DrawText("New Game", screenWidth / 2 - 50, screenHeight / 2 - 135, 20, RED);
+    
+    // Desenha o botão "Continue"
+    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, GRAY);
+    DrawText("Continue", screenWidth / 2 - 50, screenHeight / 2 - 35, 20, RED);
+
+    DrawText("Press ESC to exit", screenWidth / 2 - 100, screenHeight - 20 , 20, WHITE);
+
+    Vector2 mousePos = GetMousePosition();
+    if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
+        mousePos.y >= screenHeight / 2 - 150 && mousePos.y <= screenHeight / 2 - 100) {
         
-        return game_state; // Retorna o estado do jogo
+        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
+        DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);  
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            return PLAYING; // Muda para o estado de jogo
+        }
+        
+    }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
+        mousePos.y >= screenHeight / 2 - 50 && mousePos.y <= screenHeight / 2) {
+        
+        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, RAYWHITE);
+        DrawText("Continue", screenWidth / 2 - 50 , screenHeight / 2 - 35, 20, RED);
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {    
+            EndDrawing();  
+            return CONTINUE_MENU; 
+        }
+        
+
+    }else if (IsKeyPressed(KEY_ESCAPE)) {
+        return GAME_OVER; // Sai do menu
     }
-    return game_state; // Retorna o estado do jogo se não estiver no menu
+    EndDrawing();
+    
+    return game_state; // Retorna o estado do jogo
+
+}
+
+Game::GameState Game::continue_menu(GameState game_state) {
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Continue Menu Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 200, 20, WHITE);
+    
+    // Desenha o botão "Continue"
+    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, GRAY);
+    DrawText("Continue", screenWidth / 2 - 50, screenHeight / 2 - 35, 20, RED);
+
+    DrawText("Press ESC to exit", screenWidth / 2 - 100, screenHeight - 20 , 20, WHITE);
+
+    Vector2 mousePos = GetMousePosition();
+    if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
+        mousePos.y >= screenHeight / 2 - 50 && mousePos.y <= screenHeight / 2) {
+        
+        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, RAYWHITE);
+        DrawText("Continue", screenWidth / 2 - 50 , screenHeight / 2 - 35, 20, RED);  
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            return PLAYING; // Muda para o estado de jogo
+        }
+        
+    }
+    
+    
+    if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+        return MENU; // Sai do menu
+    }
+    
+    EndDrawing();
+    
+    return game_state; // Retorna o estado do jogo
 }
 
 // Função principal de jogo

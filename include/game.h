@@ -25,7 +25,9 @@ public:
     enum GameState {
         MENU,
         PLAYING,
-        GAME_OVER
+        PAUSED,
+        GAME_OVER,
+        CONTINUE_MENU
     };
 
     vector<pair<Vector2, Vector2>> walls ;
@@ -33,9 +35,9 @@ public:
     void play_step(player &p, char fase_atual[CODE_SIZE]);
 
     GameState menu(GameState game_state);
+    GameState continue_menu(GameState game_state);
 
 };
-
 
 
 #endif /* GAME_H */
