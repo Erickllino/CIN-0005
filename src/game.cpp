@@ -18,14 +18,35 @@ Game::Game(float width, float height) {
 
     // Obstáculo interno (exemplo)
     p1_walls = {
-        {{300, 100}, {400, 100}},
-        {{400, 100}, {400, 200}},
-        {{400, 200}, {300, 200}},
-        {{300, 200}, {300, 100}}
-    };
+    {{ 152, 89 }, { 151, 311 }},
+    {{ 151, 311 }, { 279, 314 }},
+    {{ 279, 314 }, { 277, 291 }},
+    {{ 277, 291 }, { 175, 285 }},
+    {{ 175, 285 }, { 180, 114 }},
+    {{ 180, 114 }, { 269, 123 }},
+    {{ 269, 123 }, { 268, 89 }},
+    {{ 268, 89 }, { 155, 92 }},
+    {{ 348, 91 }, { 348, 91 }},
+    {{ 341, 87 }, { 343, 315 }},
+    {{ 343, 315 }, { 385, 311 }},
+    {{ 386, 311 }, { 371, 82 }},
+    {{ 371, 82 }, { 341, 84 }},
+    {{ 467, 317 }, { 470, 88 }},
+    {{ 470, 88 }, { 601, 294 }},
+    {{ 601, 294 }, { 618, 83 }},
+    {{ 619, 85 }, { 643, 85 }},
+    {{ 643, 85 }, { 624, 309 }},
+    {{ 624, 309 }, { 588, 308 }},
+    {{ 588, 308 }, { 486, 144 }},
+    {{ 486, 144 }, { 492, 312 }},
+    {{ 492, 312 }, { 473, 316 }},
+    {{ 473, 316 }, { 468, 315 }},
+};
+
 
     walls.insert(walls.end(), p1_walls.begin(), p1_walls.end());
 }
+
 
 // Produto escalar
 float Dot(Vector2 a, Vector2 b) {
@@ -83,8 +104,43 @@ bool CheckCollisionCircleLine(Vector2 center, float radius,
     return false;
 }
 
+// Função de menu (placeholder)
+Game::GameState Game::menu(GameState game_state) {
+    while (game_state == MENU) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawText("Menu Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 200, 20, WHITE);
+        
+        // Desenha o botão "New Game"
+        
+        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, GRAY);
+        DrawText("New Game", screenWidth / 2 - 100, screenHeight / 2 - 130, 20, RED);
+        
+        DrawText("Press ESC to exit", screenWidth / 2 - 100, screenHeight - 20 , 20, WHITE);
+        // Verifica se o mouse foi clicadod
+
+        Vector2 mousePos = GetMousePosition();
+        if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
+            mousePos.y >= screenHeight / 2 - 150 && mousePos.y <= screenHeight / 2 - 100) {
+            
+            DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
+            DrawText("New Game", screenWidth / 2 - 100, screenHeight / 2 - 130, 20, RED);  
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                return PLAYING; // Muda para o estado de jogo
+            }
+            
+        } else if (IsKeyPressed(KEY_ESCAPE)) {
+            return GAME_OVER; // Sai do menu
+        }
+        EndDrawing();
+        
+        return game_state; // Retorna o estado do jogo
+    }
+    return game_state; // Retorna o estado do jogo se não estiver no menu
+}
+
 // Função principal de jogo
-void Game::play_step(player &p) {
+void Game::play_step(player &p, char fase_atual[CODE_SIZE]) {
     BeginDrawing();
     ClearBackground(BLACK);
 
@@ -99,6 +155,7 @@ void Game::play_step(player &p) {
         p.vy -= p.vy * breakForce;
     }
     // Desenha obstáculos
+    // TODO: fazer com que as paredes sejam desenhadas de acordo com a fase
     for (auto &seg : p1_walls) {
         DrawLineV(seg.first, seg.second, RED);
     }

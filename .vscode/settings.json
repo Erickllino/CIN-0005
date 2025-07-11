@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/yienvee/Desktop/Faculdade/CIN-0005",
+            "binaryPath": "/home/yienvee/Desktop/Faculdade/CIN-0005/main",
+            "binaryArgs": []
+        }
+    ]
+}

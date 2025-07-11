@@ -9,7 +9,7 @@ FALLBACK_HEIGHT = 600
 # caminho do seu PNG
 IMAGE_PATH = 'mapa.png'
 # arquivo de saída
-OUT_PATH   = 'walls.txt'
+OUT_PATH   = 'Map_editor/walls.txt'
 
 walls = []
 current_pt = None

@@ -11,6 +11,8 @@
 using std::vector;
 using std::pair;
 
+#define CODE_SIZE 100
+
 class Game {
 private:
 
@@ -20,10 +22,17 @@ public:
     float screenWidth = 800;
     float screenHeight = 600;
 
+    enum GameState {
+        MENU,
+        PLAYING,
+        GAME_OVER
+    };
+
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p1_walls;
-    void play_step(player &p);
+    void play_step(player &p, char fase_atual[CODE_SIZE]);
 
+    GameState menu(GameState game_state);
 
 };
 
