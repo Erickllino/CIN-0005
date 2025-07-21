@@ -9,6 +9,14 @@ void player::draw() {
     
 }
 
+void player::setPosition(float newX, float newY) {
+    x = newX;
+    y = newY;
+
+    vx = 0; // Reseta a velocidade ao definir uma nova posição
+    vy = 0; // Reseta a velocidade ao definir uma nova posição
+}
+
 void player::move() {
     x += vx;
     y += vy;

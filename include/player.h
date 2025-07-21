@@ -15,6 +15,7 @@ public:
     float x, y;
     float vx, vy;
     void draw();
+    void setPosition(float newX, float newY);
     void move();
     void acelerate_x(float dx);
     void acelerate_y(float dy);

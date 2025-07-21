@@ -7,11 +7,12 @@
 #include <utility>
 #include <iostream>
 #include <cmath>
+#include <unordered_map>
 
 using std::vector;
 using std::pair;
 
-#define CODE_SIZE 100
+#define CODE_SIZE 101
 
 class Game {
 private:
@@ -30,12 +31,13 @@ public:
         CONTINUE_MENU
     };
 
+
     vector<pair<Vector2, Vector2>> walls ;
-    vector<pair<Vector2, Vector2>> p1_walls;
+    vector<pair<Vector2, Vector2>> p_walls;
     void play_step(player &p, char fase_atual[CODE_SIZE]);
 
-    GameState menu(GameState game_state);
-    GameState continue_menu(GameState game_state);
+    GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
 
 };
 
