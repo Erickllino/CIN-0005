@@ -1,7 +1,10 @@
 #include "game.h"
+#include "fases.h"
 #include <raylib.h>
 #include <iostream>
 #include <cmath>
+
+#include <cstring>
 
 // Inicializa o jogo com paredes de borda e paredes internas
 Game::Game(float width, float height) {
@@ -15,36 +18,6 @@ Game::Game(float width, float height) {
         {{screenWidth, screenHeight}, {0, screenHeight}},  // Fundo
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
-
-    // Obstáculo interno (exemplo)
-    p1_walls = {
-    {{ 152, 89 }, { 151, 311 }},
-    {{ 151, 311 }, { 279, 314 }},
-    {{ 279, 314 }, { 277, 291 }},
-    {{ 277, 291 }, { 175, 285 }},
-    {{ 175, 285 }, { 180, 114 }},
-    {{ 180, 114 }, { 269, 123 }},
-    {{ 269, 123 }, { 268, 89 }},
-    {{ 268, 89 }, { 155, 92 }},
-    {{ 348, 91 }, { 348, 91 }},
-    {{ 341, 87 }, { 343, 315 }},
-    {{ 343, 315 }, { 385, 311 }},
-    {{ 386, 311 }, { 371, 82 }},
-    {{ 371, 82 }, { 341, 84 }},
-    {{ 467, 317 }, { 470, 88 }},
-    {{ 470, 88 }, { 601, 294 }},
-    {{ 601, 294 }, { 618, 83 }},
-    {{ 619, 85 }, { 643, 85 }},
-    {{ 643, 85 }, { 624, 309 }},
-    {{ 624, 309 }, { 588, 308 }},
-    {{ 588, 308 }, { 486, 144 }},
-    {{ 486, 144 }, { 492, 312 }},
-    {{ 492, 312 }, { 473, 316 }},
-    {{ 473, 316 }, { 468, 315 }},
-};
-
-
-    walls.insert(walls.end(), p1_walls.begin(), p1_walls.end());
 }
 
 
@@ -103,9 +76,8 @@ bool CheckCollisionCircleLine(Vector2 center, float radius,
     }
     return false;
 }
-int i = 0;
 // Função de menu (placeholder)
-Game::GameState Game::menu(GameState game_state) {
+Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p) {
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -128,6 +100,10 @@ Game::GameState Game::menu(GameState game_state) {
         DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
         DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);  
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            strcpy(fase, "fase1");
+            p_walls = p1_walls;
+            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+            p.setPosition(100, 500); // Define a posição inicial do jogador 
             return PLAYING; // Muda para o estado de jogo
         }
         
@@ -151,24 +127,64 @@ Game::GameState Game::menu(GameState game_state) {
 
 }
 
-Game::GameState Game::continue_menu(GameState game_state) {
+Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Continue Menu Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 200, 20, WHITE);
+    DrawText("Digite o codigo da fase", screenWidth / 2 - 125, screenHeight / 2 - 200, 20, WHITE);
     
+    int key = GetCharPressed();
+    
+    int letterCount = strlen(fase); // Tamanho máximo do código
+
+    std::cout  << "Codigo fase: " << fase <<  " Letter count: " << letterCount <<std::endl;
+    
+    while (key > 0){
+        // NOTE: Only allow keys in range [32..125]
+        if ((key >= 32) && (key <= 125) && (letterCount < CODE_SIZE - 1))
+        {
+            std::cout << "Key add: " << (char)key << std::endl;
+            fase[letterCount] = (char)key;
+            fase[letterCount+1] = '\0'; // Add null terminator at the end of the string.
+            //letterCount++;
+        }
+        key = GetCharPressed();  
+    }
+
+    if (IsKeyPressed(KEY_BACKSPACE)){
+        if (letterCount < 0) letterCount = 0;
+        fase[letterCount - 1] = '\0';
+    }
+
+    DrawText(fase, screenWidth / 2 - 100, screenHeight / 2 - 150, 20, WHITE);
+
+
     // Desenha o botão "Continue"
-    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, GRAY);
-    DrawText("Continue", screenWidth / 2 - 50, screenHeight / 2 - 35, 20, RED);
+    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 + 200, 300, 50}, 0.5,0, GRAY);
+    DrawText("Play!", screenWidth / 2 - 25, screenHeight / 2 + 215, 20, RED);
 
     DrawText("Press ESC to exit", screenWidth / 2 - 100, screenHeight - 20 , 20, WHITE);
 
     Vector2 mousePos = GetMousePosition();
     if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
-        mousePos.y >= screenHeight / 2 - 50 && mousePos.y <= screenHeight / 2) {
+        mousePos.y >= screenHeight / 2 + 200 && mousePos.y <= screenHeight / 2 + 250) {
         
-        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, RAYWHITE);
-        DrawText("Continue", screenWidth / 2 - 50 , screenHeight / 2 - 35, 20, RED);  
+        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 + 200, 300, 50}, 0.5,0, RAYWHITE);
+        DrawText("Play!", screenWidth / 2 - 25 , screenHeight / 2 + 215, 20, RED);  
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            // Define as paredes e posição inicial do jogador de acordo com a fase
+            if(strcmp(fase, "") == 0) {
+                strcpy(fase, "fase1");
+            } else if (strcmp(fase, "fase1") == 0) {
+                p_walls = p1_walls;
+                walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+                p.setPosition(100, 500); // Define a posição inicial do jogador
+            } else if (strcmp(fase, "fase2") == 0) {
+                p_walls = p2_walls;
+                walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+                p.setPosition(500, 500); // Define a posição inicial do jogador
+            } else {
+                std::cout << "Fase desconhecida: " << fase << std::endl;
+            }
             return PLAYING; // Muda para o estado de jogo
         }
         
@@ -185,10 +201,10 @@ Game::GameState Game::continue_menu(GameState game_state) {
 }
 
 // Função principal de jogo
-void Game::play_step(player &p, char fase_atual[CODE_SIZE]) {
+void Game::play_step(player &p, char fase[CODE_SIZE]) {
     BeginDrawing();
     ClearBackground(BLACK);
-
+    
     // Input
     if (IsKeyDown(KEY_UP))    p.acelerate_y(-0.1f);
     if (IsKeyDown(KEY_DOWN))  p.acelerate_y(0.1f);
@@ -201,7 +217,7 @@ void Game::play_step(player &p, char fase_atual[CODE_SIZE]) {
     }
     // Desenha obstáculos
     // TODO: fazer com que as paredes sejam desenhadas de acordo com a fase
-    for (auto &seg : p1_walls) {
+    for (auto &seg : p_walls) {
         DrawLineV(seg.first, seg.second, RED);
     }
 

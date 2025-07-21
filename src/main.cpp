@@ -16,14 +16,15 @@ int main() {
   player p((float) screenWidth/2,(float) screenHeight/2, 10);
   Game::GameState game_state = Game::MENU;
   int paused = 0;
+  char fase[CODE_SIZE] = "\0";
+
   while (!WindowShouldClose()) {
 
     // Open menu
-    char fase[CODE_SIZE] = "fase1"; // Fase inicial
     
     switch (game_state) {
       case Game::MENU:
-        game_state = game.menu(game_state);
+        game_state = game.menu(game_state, fase, p);
         break;
       case Game::PLAYING:
         game.play_step(p, fase);
@@ -38,7 +39,7 @@ int main() {
         break;
       case Game::CONTINUE_MENU:
         // TODO: Implement continue menu logic
-        game_state = game.continue_menu(game_state);
+        game_state = game.continue_menu(game_state, fase, p);
         break;
       case Game::PAUSED:
         BeginDrawing();
@@ -54,23 +55,14 @@ int main() {
 
     if (IsKeyPressed(KEY_M)) {
       game_state = Game::MENU; // Change to menu state
-      
     }
     // TODO: Solve P double press issue
     if (IsKeyPressed(KEY_P) && game_state == Game::PLAYING && paused <= 0) {
       paused = 10; // Reset pause counter
       game_state = Game::PAUSED; // Change to paused state
     }
-
-    // if (IsKeyPressed(KEY_ESCAPE)) {
-    //   game_state = Game::GAME_OVER; // Change to game over state
-    // }
-
-    // Check for exit key (Escape)
-
-
-
   }
+
   CloseWindow();
   return 0;
 }
