@@ -1,12 +1,12 @@
-# Makefile multiplataforma: Linux/macOS e Windows (MinGW)
 
-# Compiladores
+
+# Compilador
 CC          := g++
 
 # Flags de compilação comuns
 CFLAGS      := -I./include -I./external/raylib/src
 
-# Flags de link para cada plataforma
+# Flags de link 
 LDFLAGS_LIN := -Lexternal/raylib/src -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 # Diretórios fonte e build

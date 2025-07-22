@@ -30,7 +30,8 @@ public:
         GAME_OVER,
         CONTINUE_MENU
     };
-
+    
+    Sound ball_collision = LoadSound("assets/sounds/collision.wav");
 
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;

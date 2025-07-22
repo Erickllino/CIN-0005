@@ -230,9 +230,11 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
     for (auto &seg : walls) {
         Vector2 cp, normal;
         if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
+            PlaySound(Game::ball_collision); // Toca som de colisão
             float dot = Dot(vel, normal);
             vel = Sub(vel, Scale(normal, 2 * dot));
             pos = Add(cp, Scale(normal, r));
+            //vel = Scale(vel, 0.8f); // Aplica um fator de atrito
             break;
         }
     }
@@ -254,6 +256,9 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
         pos.y = screenHeight - r;
         vel.y *= -1;
     }
+
+    // Adiciona gravidade
+    vel.y += 0.1f; // Simula gravidade
 
     // Aplica nova posição e velocidade ao player
     p.x = pos.x;
