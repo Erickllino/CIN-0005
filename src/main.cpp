@@ -11,6 +11,7 @@ float screenHeight = 600.0;
 int main() {
   // Initialize the window
   InitWindow(screenWidth, screenHeight, "raylib basic window");
+  InitAudioDevice();
   SetTargetFPS(120);
   Game game(screenWidth, screenHeight);
   player p((float) screenWidth/2,(float) screenHeight/2, 10);
@@ -63,6 +64,8 @@ int main() {
     }
   }
 
+  UnloadSound(game.ball_collision);
+  CloseAudioDevice();
   CloseWindow();
   return 0;
 }
