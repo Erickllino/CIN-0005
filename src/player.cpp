@@ -1,12 +1,10 @@
 #include "player.h"
-#include <raylib.h>
 
 player::player(float x, float y, int radius)
     : x(x), y(y), radius(radius), vx(0), vy(0) {}
 
 void player::draw() {
     DrawCircle(x,y, radius, RED);
-    
 }
 
 void player::setPosition(float newX, float newY) {

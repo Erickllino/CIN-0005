@@ -1,16 +1,13 @@
 #ifndef GAME_H
 #define GAME_H
-
-#include "player.h"
 #include "raylib.h"
-#include <vector>
+#include "player.h"
+#include "fases.h"
+#include "utility.h"
+
 #include <utility>
 #include <iostream>
-#include <cmath>
-#include <unordered_map>
-
-using std::vector;
-using std::pair;
+#include <cstring>
 
 #define CODE_SIZE 101
 
