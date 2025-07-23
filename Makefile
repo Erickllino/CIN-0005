@@ -3,11 +3,19 @@
 # Compilador
 CC          := g++
 
+# Detecção do sistema operacional
+UNAME_S := $(shell uname -s)
+
 # Flags de compilação comuns
 CFLAGS      := -I./include -I./external/raylib/src
 
-# Flags de link 
-LDFLAGS_LIN := -Lexternal/raylib/src -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+# Flags de link específicas por plataforma
+ifeq ($(UNAME_S),Linux)
+    LDFLAGS := -Lexternal/raylib/src -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+endif
+ifeq ($(UNAME_S),Darwin)
+    LDFLAGS := -Lexternal/raylib/src -lraylib -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
+endif
 
 # Diretórios fonte e build
 SRC_DIR       := src
@@ -24,9 +32,9 @@ TARGET         := main
 all: $(BUILD_DIR) $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $^ -o $@ $(LDFLAGS_LIN)
+	$(CC) $^ -o $@ $(LDFLAGS)
 
-# Regra para objetos Linux/macOS
+# Regra para objetos (Linux/macOS compatível)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
@@ -36,3 +44,11 @@ $(BUILD_DIR):
 # Limpeza
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
+
+# Informações do sistema
+info:
+	@echo "Sistema detectado: $(UNAME_S)"
+	@echo "Compilador: $(CC)"
+	@echo "Flags de link: $(LDFLAGS)"
+
+.PHONY: all clean info
