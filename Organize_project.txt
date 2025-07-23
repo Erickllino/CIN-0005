@@ -1,0 +1,60 @@
+Campeonato de pinball
+
+(Ivan / Heiji)
+Cinematica para mostrar historia
+    - Aliens invadiram a terra e para decidir o futuro do mundo
+    - Eles chamaram a humanidade para jogar um Torneio de pinball
+    - Voce esta competido para ser presidente do mundo
+
+    imagens da cinematic:
+        - Nave de Alien chegando
+        - Foto dos Aliens perto de um pinball
+        - Alguem virando uma bola de pinball
+
+Faze os png dos mapa
+UI do jogo
+
+(Heitor / Heiji)        
+Selecionar Personagens Suporte
+
+
+    - Eitor (JoaoPintoBall)
+        - Pega ball    
+    - Jessica (Jessball)
+        - Score ball
+    - Heiji (LeBall)
+        - Trava ball
+    - Erick
+    - Samira
+    - Ivan
+
+(Sami)
+Fazer os mapas de cada Fazer
+Fases
+    - Alguns coletaveis
+    - Pontos por bater
+    
+    - Boss fight?
+
+
+
+(Jessica) 
+Fazer a logica do Bumper/Fliper
+Fazer a logica do lançamento da bola
+
+
+
+(Erick)
+LeaderBoard cada fase
+    - Gera um numero aleatório entre um intervalo
+    - Se voce ficou em 1o passa para proxima fase
+    - else game over
+
+    Nome dos Aliens:
+    - Ivison Rafael
+    - O real Joao Pinto bola
+    - Egito T.
+    - GC
+    - TT
+    - 
+

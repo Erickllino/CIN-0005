@@ -177,6 +177,8 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
         }
     }
 
+    // Colar o bumper
+
     // Verifica bordas da tela para evitar sair da tela mesmo com colisão
     if (pos.x - r < 0) {
         pos.x = r;
