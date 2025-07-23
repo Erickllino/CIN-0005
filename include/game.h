@@ -22,6 +22,7 @@ public:
 
     enum GameState {
         MENU,
+        SELECT_CARACTER,
         PLAYING,
         PAUSED,
         GAME_OVER,
