@@ -5,10 +5,7 @@
 
 class player {
 private:
-
-
-
-    
+    // Atributos privados, se necessário   
 public:
     player(float x,float y, int radius);
     int radius = 10;

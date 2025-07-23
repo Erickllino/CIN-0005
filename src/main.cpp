@@ -1,7 +1,6 @@
-#include "raylib.h"
-#include "player.h"
-#include "game.h"
+#include "raylib.h" // check
 
+#include "game.h"
 
 
 float screenWidth = 800.0;
