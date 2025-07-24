@@ -15,10 +15,10 @@ Game::Game(float width, float height) {
     
     // Inicializa variáveis dos flipers
     flipperLength = 80.0f;
-    leftFlipperPos = {screenWidth * 0.3f, screenHeight - 100.0f};
-    rightFlipperPos = {screenWidth * 0.7f, screenHeight - 100.0f};
-    leftFlipperAngle = -30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
-    rightFlipperAngle = 30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
+    leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
+    rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
+    leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
+    rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
     leftFlipperPressed = false;
     rightFlipperPressed = false;
 }
@@ -195,18 +195,18 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
     // Atualiza ângulos dos flipers baseado no input
     float flipperSpeed = 5.0f;
     
-    // Fliper esquerdo: rotaciona de -30° para +45° quando acionado
+    // Fliper esquerdo: rotaciona de 30° para -30° quando acionado
     if (leftFlipperPressed) {
-        leftFlipperAngle = Clamp(leftFlipperAngle + flipperSpeed, -30.0f, 45.0f);
+        leftFlipperAngle = Clamp(leftFlipperAngle - flipperSpeed, -30.0f, 30.0f);
     } else {
-        leftFlipperAngle = Clamp(leftFlipperAngle - flipperSpeed, -30.0f, 45.0f);
+        leftFlipperAngle = Clamp(leftFlipperAngle + flipperSpeed, -30.0f, 30.0f);
     }
     
-    // Fliper direito: rotaciona de +30° para -45° quando acionado  
+    // Fliper direito: rotaciona de -30° para 30° quando acionado  
     if (rightFlipperPressed) {
-        rightFlipperAngle = Clamp(rightFlipperAngle - flipperSpeed, -45.0f, 30.0f);
+        rightFlipperAngle = Clamp(rightFlipperAngle + flipperSpeed, 180.0f-30.0f, 180.0f + 30.0f);
     } else {
-        rightFlipperAngle = Clamp(rightFlipperAngle + flipperSpeed, -45.0f, 30.0f);
+        rightFlipperAngle = Clamp(rightFlipperAngle - flipperSpeed, 180.0f-30.0f, 180.0f +30.0f);
     }
     
     // Calcula as posições finais dos flipers

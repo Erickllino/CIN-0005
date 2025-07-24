@@ -10,8 +10,8 @@ O jogo agora possui um sistema de flipers de pinball que permite ao jogador cont
 ## Funcionalidades
 - Os flipers são posicionados na parte inferior da tela (30% e 70% da largura)
 - Cada fliper tem 80 pixels de comprimento
-- **Fliper esquerdo**: Rotaciona de -30° para +45° quando acionado (movimento anti-horário)
-- **Fliper direito**: Rotaciona de +30° para -45° quando acionado (movimento horário)
+- **Fliper esquerdo**: Rotaciona de +30° para -30° quando acionado (movimento anti-horário)
+- **Fliper direito**: Rotaciona de -30° para +30° quando acionado (movimento horário)
 - Quando acionados, os flipers aplicam força extra à bola
 - Os flipers mudam de cor (branco → amarelo) quando acionados
 - Som de colisão é tocado quando a bola toca nos flipers
