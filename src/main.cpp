@@ -9,6 +9,7 @@ float screenHeight = 600.0;
 
 int main() {
   // Initialize the window
+  SetConfigFlags(FLAG_WINDOW_HIGHDPI | FLAG_WINDOW_RESIZABLE);
   InitWindow(screenWidth, screenHeight, "raylib basic window");
   InitAudioDevice();
   SetTargetFPS(120);
@@ -27,7 +28,11 @@ int main() {
         game_state = game.menu(game_state, fase, p);
         break;
       case Game::PLAYING:
-        game.play_step(p, fase);
+        game_state = game.play_step(game_state, fase, p);
+        break;
+      case Game::SCOREBOARD:
+        // Placeholder for scoreboard logic
+        game_state = game.Scoreboard(game_state, fase, p);
         break;
       case Game::GAME_OVER:
         // Placeholder for game over logic
