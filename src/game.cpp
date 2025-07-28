@@ -12,9 +12,8 @@ Game::Game(float width, float height) {
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {screenWidth/2 - HOLE_WIDTH, screenHeight}},  // Fundo com buraco
-        {{screenWidth/2 + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}}, // Fundo com buraco
-        {{0, 0}, {0, screenHeight}},                    // Esquerda
+        {{screenWidth, screenHeight}, {0, screenHeight}},  // Fundo
+        {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
     // Inicializa variáveis dos flipers
