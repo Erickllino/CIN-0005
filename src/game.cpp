@@ -17,6 +17,15 @@ Game::Game(float width, float height) {
         {{0, 0}, {0, screenHeight}},                    // Esquerda
     };
 
+    // Inicializa variáveis dos flipers
+    flipperLength = 80.0f;
+    leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
+    rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
+    leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
+    rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
+    leftFlipperPressed = false;
+    rightFlipperPressed = false;
+
 }
 
 // Função de menu (placeholder)
