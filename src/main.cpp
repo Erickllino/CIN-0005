@@ -24,10 +24,15 @@ int main() {
     
     switch (game_state) {
       case Game::MENU:
-        game_state = game.menu(game_state, fase, p);
+        game_state = game.menu(game_state, fase);
         break;
+      
+      case Game::CHARACTER_SELECTION:
+        game_state = game.selectCharacter(game_state, fase); // ← função nova
+        break;
+
       case Game::PLAYING:
-        game.play_step(p, fase);
+        game.play_step(fase);
         break;
       case Game::GAME_OVER:
         // Placeholder for game over logic
@@ -39,7 +44,7 @@ int main() {
         break;
       case Game::CONTINUE_MENU:
         // TODO: Implement continue menu logic
-        game_state = game.continue_menu(game_state, fase, p);
+        game_state = game.continue_menu(game_state, fase);
         break;
       case Game::PAUSED:
         BeginDrawing();
@@ -61,6 +66,7 @@ int main() {
       paused = 10; // Reset pause counter
       game_state = Game::PAUSED; // Change to paused state
     }
+    
   }
 
   UnloadSound(game.ball_collision);
