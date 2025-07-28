@@ -35,7 +35,6 @@ public:
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
     GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
-
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
