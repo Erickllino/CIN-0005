@@ -12,6 +12,15 @@ Game::Game(float width, float height) {
         {{screenWidth, screenHeight}, {0, screenHeight}},  // Fundo
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
+    
+    // Inicializa variáveis dos flipers
+    flipperLength = 80.0f;
+    leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
+    rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
+    leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
+    rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
+    leftFlipperPressed = false;
+    rightFlipperPressed = false;
 }
 
 // Função de menu (placeholder)
@@ -177,7 +186,80 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
         }
     }
 
-    // Colar o bumper
+    // Colar o fliper de pinball
+    
+    // Input dos flipers
+    leftFlipperPressed = IsKeyDown(KEY_Q);
+    rightFlipperPressed = IsKeyDown(KEY_E);
+    
+    // Atualiza ângulos dos flipers baseado no input
+    float flipperSpeed = 5.0f;
+    
+    // Fliper esquerdo: rotaciona de 30° para -30° quando acionado
+    if (leftFlipperPressed) {
+        leftFlipperAngle = Clamp(leftFlipperAngle - flipperSpeed, -30.0f, 30.0f);
+    } else {
+        leftFlipperAngle = Clamp(leftFlipperAngle + flipperSpeed, -30.0f, 30.0f);
+    }
+    
+    // Fliper direito: rotaciona de -30° para 30° quando acionado  
+    if (rightFlipperPressed) {
+        rightFlipperAngle = Clamp(rightFlipperAngle + flipperSpeed, 180.0f-30.0f, 180.0f + 30.0f);
+    } else {
+        rightFlipperAngle = Clamp(rightFlipperAngle - flipperSpeed, 180.0f-30.0f, 180.0f +30.0f);
+    }
+    
+    // Calcula as posições finais dos flipers
+    float leftAngleRad = leftFlipperAngle * PI / 180.0f;
+    float rightAngleRad = rightFlipperAngle * PI / 180.0f;
+    
+    Vector2 leftFlipperEnd = {
+        leftFlipperPos.x + (float)cos(leftAngleRad) * flipperLength,
+        leftFlipperPos.y + (float)sin(leftAngleRad) * flipperLength
+    };
+    
+    Vector2 rightFlipperEnd = {
+        rightFlipperPos.x + (float)cos(rightAngleRad) * flipperLength,
+        rightFlipperPos.y + (float)sin(rightAngleRad) * flipperLength
+    };
+    
+    // Verifica colisão com flipers
+    Vector2 cp, normal;
+    
+    // Colisão com fliper esquerdo
+    if (CheckCollisionCircleLine(pos, r, leftFlipperPos, leftFlipperEnd, cp, normal)) {
+        PlaySound(Game::ball_collision);
+        float dot = Dot(vel, normal);
+        vel = Sub(vel, Scale(normal, 2 * dot));
+        pos = Add(cp, Scale(normal, r));
+        
+        // Adiciona força extra se o fliper estiver sendo acionado
+        if (leftFlipperPressed) {
+            Vector2 flipperForce = {(float)cos(leftAngleRad) * 3.0f, (float)sin(leftAngleRad) * 3.0f};
+            vel = Add(vel, flipperForce);
+        }
+    }
+    
+    // Colisão com fliper direito
+    if (CheckCollisionCircleLine(pos, r, rightFlipperPos, rightFlipperEnd, cp, normal)) {
+        PlaySound(Game::ball_collision);
+        float dot = Dot(vel, normal);
+        vel = Sub(vel, Scale(normal, 2 * dot));
+        pos = Add(cp, Scale(normal, r));
+        
+        // Adiciona força extra se o fliper estiver sendo acionado
+        if (rightFlipperPressed) {
+            Vector2 flipperForce = {(float)cos(rightAngleRad) * 3.0f, (float)sin(rightAngleRad) * 3.0f};
+            vel = Add(vel, flipperForce);
+        }
+    }
+    
+    // Desenha os flipers
+    DrawLineEx(leftFlipperPos, leftFlipperEnd, 8.0f, leftFlipperPressed ? YELLOW : WHITE);
+    DrawLineEx(rightFlipperPos, rightFlipperEnd, 8.0f, rightFlipperPressed ? YELLOW : WHITE);
+    DrawCircleV(leftFlipperPos, 6.0f, GRAY);   // Ponto de rotação
+    DrawCircleV(rightFlipperPos, 6.0f, GRAY);  // Ponto de rotação
+
 
     // Verifica bordas da tela para evitar sair da tela mesmo com colisão
     if (pos.x - r < 0) {
