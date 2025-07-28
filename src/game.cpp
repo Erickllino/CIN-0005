@@ -1,26 +1,22 @@
 #include "game.h"
 
+int HOLE_WIDTH = 100; // Largura do buraco na parede direita
+
 // Inicializa o jogo com paredes de borda e paredes internas
 Game::Game(float width, float height) {
     screenWidth = width;
     screenHeight = height;
 
+    
     // Paredes externas
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{screenWidth, screenHeight}, {0, screenHeight}},  // Fundo
-        {{0, screenHeight}, {0, 0}}                    // Esquerda
+        {{0, screenHeight}, {screenWidth/2 - HOLE_WIDTH, screenHeight}},  // Fundo com buraco
+        {{screenWidth/2 + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}}, // Fundo com buraco
+        {{0, 0}, {0, screenHeight}},                    // Esquerda
     };
-    
-    // Inicializa variáveis dos flipers
-    flipperLength = 80.0f;
-    leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
-    rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
-    leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
-    rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
-    leftFlipperPressed = false;
-    rightFlipperPressed = false;
+
 }
 
 // Função de menu (placeholder)
@@ -147,8 +143,23 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
     return game_state; // Retorna o estado do jogo
 }
 
+Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Scoreboard Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, WHITE);
+    
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        return MENU; // Retorna ao menu
+    }
+    
+    EndDrawing();
+    
+    return game_state; // Retorna o estado do jogo
+}
+
+
 // Função principal de jogo
-void Game::play_step(player &p, char fase[CODE_SIZE]) {
+Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
     
@@ -173,6 +184,9 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
     Vector2 vel = {p.vx, p.vy};
     float r = p.radius;
 
+    if (pos.y - 2 * r > screenHeight) {
+        game_state = SCOREBOARD; // Se cair no buraco, game over
+    }
     // Verifica colisão com paredes
     for (auto &seg : walls) {
         Vector2 cp, normal;
@@ -274,13 +288,13 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
         pos.y = r;
         vel.y *= -1;
     }
-    if (pos.y + r > screenHeight) {
+    if (pos.y + r > screenHeight && pos.x < screenWidth/2 - HOLE_WIDTH && pos.x > screenWidth/2 + HOLE_WIDTH) {
         pos.y = screenHeight - r;
         vel.y *= -1;
     }
 
     // Adiciona gravidade
-    vel.y += 0.1f; // Simula gravidade
+    //vel.y += 0.1f; // Simula gravidade
 
     // Aplica nova posição e velocidade ao player
     p.x = pos.x;
@@ -295,4 +309,5 @@ void Game::play_step(player &p, char fase[CODE_SIZE]) {
     p.draw();   // desenha o jogador
 
     EndDrawing();
+    return game_state; // Retorna o estado do jogo
 }
