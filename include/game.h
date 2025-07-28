@@ -32,9 +32,18 @@ public:
     
     Sound ball_collision = LoadSound("assets/sounds/collision.wav");
 
+    // Variáveis para os flipers
+    Vector2 leftFlipperPos;
+    Vector2 rightFlipperPos;
+    float leftFlipperAngle;
+    float rightFlipperAngle;
+    float flipperLength;
+    bool leftFlipperPressed;
+    bool rightFlipperPressed;
+
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
-    GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
+    void play_step(player &p, char fase_atual[CODE_SIZE]);
 
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
