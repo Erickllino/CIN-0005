@@ -50,6 +50,7 @@ public:
 
     GameState menu(GameState game_state, char fase[CODE_SIZE]);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE]);
+    GameState Scoreboard(GameState game_state, char fase[CODE_SIZE]);
     GameState selectCharacter(GameState game_state, char fase[CODE_SIZE]);
 
 };

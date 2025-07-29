@@ -109,7 +109,7 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
     Vector2 mousePos = GetMousePosition();
 
     for (int i = 0; i < numCharacters; i++) {
-        Rectangle btn = { screenWidth / 2 - 200, 100 + i * 70, 400, 50 };
+        Rectangle btn = { screenWidth / 2 - 200, 100.0f + i * 70.0f, 400, 50 };
         bool hovered = CheckCollisionPointRec(mousePos, btn);
 
         DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : DARKGRAY);
@@ -222,7 +222,7 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE]) 
     return game_state; // Retorna o estado do jogo
 }
 
-Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
+Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE]) {
     BeginDrawing();
     ClearBackground(BLACK);
     DrawText("Scoreboard Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, WHITE);
@@ -244,8 +244,49 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
     
     if (balls.empty()) { // verifica se há bolas
         EndDrawing();
-        return;
+        return game_state;
     }
+
+    // Input dos flipers
+    leftFlipperPressed = IsKeyDown(KEY_Q);
+    rightFlipperPressed = IsKeyDown(KEY_E);
+    
+    // Atualiza ângulos dos flipers baseado no input
+    float flipperSpeed = 3.0f;
+    
+    // Fliper esquerdo: rotaciona de 30° para -30° quando acionado
+    if (leftFlipperPressed) {
+        leftFlipperAngle = Clamp(leftFlipperAngle - flipperSpeed, -30.0f, 30.0f);
+    } else {
+        leftFlipperAngle = Clamp(leftFlipperAngle + flipperSpeed, -30.0f, 30.0f);
+    }
+    
+    // Fliper direito: rotaciona de -30° para 30° quando acionado  
+    if (rightFlipperPressed) {
+        rightFlipperAngle = Clamp(rightFlipperAngle + flipperSpeed, 180.0f-30.0f, 180.0f + 30.0f);
+    } else {
+        rightFlipperAngle = Clamp(rightFlipperAngle - flipperSpeed, 180.0f-30.0f, 180.0f +30.0f);
+    }
+    
+    // Calcula as posições finais dos flipers
+    float leftAngleRad = leftFlipperAngle * PI / 180.0f;
+    float rightAngleRad = rightFlipperAngle * PI / 180.0f;
+    
+    Vector2 leftFlipperEnd = {
+        leftFlipperPos.x + (float)cos(leftAngleRad) * flipperLength,
+        leftFlipperPos.y + (float)sin(leftAngleRad) * flipperLength
+    };
+    
+    Vector2 rightFlipperEnd = {
+        rightFlipperPos.x + (float)cos(rightAngleRad) * flipperLength,
+        rightFlipperPos.y + (float)sin(rightAngleRad) * flipperLength
+    };
+
+    // Desenha os flipers
+    DrawLineEx(leftFlipperPos, leftFlipperEnd, 8.0f, leftFlipperPressed ? YELLOW : WHITE);
+    DrawLineEx(rightFlipperPos, rightFlipperEnd, 8.0f, rightFlipperPressed ? YELLOW : WHITE);
+    DrawCircleV(leftFlipperPos, 6.0f, GRAY);   // Ponto de rotação
+    DrawCircleV(rightFlipperPos, 6.0f, GRAY);  // Ponto de rotação
 
     player& mainBall = balls[0];
 
@@ -283,136 +324,98 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
 
     // Atualiza posição e verifica colisao com paredes
     for (auto& b : balls) {
-    Vector2 pos = { b.x, b.y };
-    Vector2 vel = { b.vx, b.vy };
-    float r = b.radius;
+        Vector2 pos = { b.x, b.y };
+        Vector2 vel = { b.vx, b.vy };
+        float r = b.radius;
 
-    if (pos.y - 2 * r > screenHeight) {
-        game_state = SCOREBOARD; // Se cair no buraco, game over
-    }
-    // Verifica colisão com paredes
-    for (auto &seg : walls) {
+        if (b.y - 2 * r > screenHeight) {
+            game_state = SCOREBOARD; // Se cair no buraco, game over
+        }
+        // Verifica colisão com paredes
+        for (auto &seg : walls) {
+            Vector2 cp, normal;
+            if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
+                PlaySound(ball_collision); // Som
+                float dot = Dot(vel, normal);
+                vel = Sub(vel, Scale(normal, 2 * dot));
+                Vector2 newPos = Add(cp, Scale(normal, r));
+                b.x = newPos.x;
+                b.y = newPos.y;
+                break;
+            }
+        }
+
+        // Verifica colisão com flipers
         Vector2 cp, normal;
-        if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
-            PlaySound(ball_collision); // Som
+    
+        // Colisão com fliper esquerdo
+        if (CheckCollisionCircleLine(pos, r, leftFlipperPos, leftFlipperEnd, cp, normal)) {
+            PlaySound(Game::ball_collision);
             float dot = Dot(vel, normal);
             vel = Sub(vel, Scale(normal, 2 * dot));
-            pos = Add(cp, Scale(normal, r));
-            break;
+            Vector2 newPos = Add(cp, Scale(normal, r));
+            b.x = newPos.x;
+            b.y = newPos.y;
+            
+            // Adiciona força extra se o fliper estiver sendo acionado
+            if (leftFlipperPressed) {
+                Vector2 flipperForce = {(float)cos(leftAngleRad) * 3.0f, (float)sin(leftAngleRad) * 3.0f};
+                vel = Add(vel, flipperForce);
+            }
         }
-    }
+    
+        // Colisão com fliper direito
+        if (CheckCollisionCircleLine(pos, r, rightFlipperPos, rightFlipperEnd, cp, normal)) {
+            PlaySound(Game::ball_collision);
+            float dot = Dot(vel, normal);
+            vel = Sub(vel, Scale(normal, 2 * dot));
+            Vector2 newPos = Add(cp, Scale(normal, r));
+            b.x = newPos.x;
+            b.y = newPos.y;
+            
+            // Adiciona força extra se o fliper estiver sendo acionado
+            if (rightFlipperPressed) {
+                Vector2 flipperForce = {(float)cos(rightAngleRad) * 3.0f, (float)sin(rightAngleRad) * 3.0f};
+                vel = Add(vel, flipperForce);
+            }
+        }
+    
 
-    // Colar o fliper de pinball
-    
-    // Input dos flipers
-    leftFlipperPressed = IsKeyDown(KEY_Q);
-    rightFlipperPressed = IsKeyDown(KEY_E);
-    
-    // Atualiza ângulos dos flipers baseado no input
-    float flipperSpeed = 5.0f;
-    
-    // Fliper esquerdo: rotaciona de 30° para -30° quando acionado
-    if (leftFlipperPressed) {
-        leftFlipperAngle = Clamp(leftFlipperAngle - flipperSpeed, -30.0f, 30.0f);
-    } else {
-        leftFlipperAngle = Clamp(leftFlipperAngle + flipperSpeed, -30.0f, 30.0f);
-    }
-    
-    // Fliper direito: rotaciona de -30° para 30° quando acionado  
-    if (rightFlipperPressed) {
-        rightFlipperAngle = Clamp(rightFlipperAngle + flipperSpeed, 180.0f-30.0f, 180.0f + 30.0f);
-    } else {
-        rightFlipperAngle = Clamp(rightFlipperAngle - flipperSpeed, 180.0f-30.0f, 180.0f +30.0f);
-    }
-    
-    // Calcula as posições finais dos flipers
-    float leftAngleRad = leftFlipperAngle * PI / 180.0f;
-    float rightAngleRad = rightFlipperAngle * PI / 180.0f;
-    
-    Vector2 leftFlipperEnd = {
-        leftFlipperPos.x + (float)cos(leftAngleRad) * flipperLength,
-        leftFlipperPos.y + (float)sin(leftAngleRad) * flipperLength
-    };
-    
-    Vector2 rightFlipperEnd = {
-        rightFlipperPos.x + (float)cos(rightAngleRad) * flipperLength,
-        rightFlipperPos.y + (float)sin(rightAngleRad) * flipperLength
-    };
-    
-    // Verifica colisão com flipers
-    Vector2 cp, normal;
-    
-    // Colisão com fliper esquerdo
-    if (CheckCollisionCircleLine(pos, r, leftFlipperPos, leftFlipperEnd, cp, normal)) {
-        PlaySound(Game::ball_collision);
-        float dot = Dot(vel, normal);
-        vel = Sub(vel, Scale(normal, 2 * dot));
-        pos = Add(cp, Scale(normal, r));
+
+
+        // Verifica bordas da tela para evitar sair da tela mesmo com colisão
+        if (b.x - r < 0) {
+            b.x = r;
+            vel.x *= -1;
+        }
+        if (b.x + r > screenWidth) {
+            b.x = screenWidth - r;
+            vel.x *= -1;
+        }
+        if (b.y - r < 0) {
+            b.y = r;
+            vel.y *= -1;
+        }
+        if (b.y + r > screenHeight && (b.x < screenWidth/2 - HOLE_WIDTH || b.x > screenWidth/2 + HOLE_WIDTH)) {
+            b.y = screenHeight - r;
+            vel.y *= -1;
+        }
+
+        // Adiciona gravidade
+        vel.y += 0.1f; // Simula gravidade
+
+        // Aplica nova posição e velocidade ao player
+        b.x = pos.x;
+        b.y = pos.y;
+        // Limita a velocidade
+        vel.x = Clamp(vel.x, -5.0f, 5.0f);
+        vel.y = Clamp(vel.y, -5.0f, 5.0f);
+        b.vx = vel.x;
+        b.vy = vel.y;
         
-        // Adiciona força extra se o fliper estiver sendo acionado
-        if (leftFlipperPressed) {
-            Vector2 flipperForce = {(float)cos(leftAngleRad) * 3.0f, (float)sin(leftAngleRad) * 3.0f};
-            vel = Add(vel, flipperForce);
-        }
-    }
-    
-    // Colisão com fliper direito
-    if (CheckCollisionCircleLine(pos, r, rightFlipperPos, rightFlipperEnd, cp, normal)) {
-        PlaySound(Game::ball_collision);
-        float dot = Dot(vel, normal);
-        vel = Sub(vel, Scale(normal, 2 * dot));
-        pos = Add(cp, Scale(normal, r));
-        
-        // Adiciona força extra se o fliper estiver sendo acionado
-        if (rightFlipperPressed) {
-            Vector2 flipperForce = {(float)cos(rightAngleRad) * 3.0f, (float)sin(rightAngleRad) * 3.0f};
-            vel = Add(vel, flipperForce);
-        }
-    }
-    
-    // Desenha os flipers
-    DrawLineEx(leftFlipperPos, leftFlipperEnd, 8.0f, leftFlipperPressed ? YELLOW : WHITE);
-    DrawLineEx(rightFlipperPos, rightFlipperEnd, 8.0f, rightFlipperPressed ? YELLOW : WHITE);
-    DrawCircleV(leftFlipperPos, 6.0f, GRAY);   // Ponto de rotação
-    DrawCircleV(rightFlipperPos, 6.0f, GRAY);  // Ponto de rotação
-
-
-    // Verifica bordas da tela para evitar sair da tela mesmo com colisão
-    if (pos.x - r < 0) {
-        pos.x = r;
-        vel.x *= -1;
-    }
-    if (pos.x + r > screenWidth) {
-        pos.x = screenWidth - r;
-        vel.x *= -1;
-    }
-    if (pos.y - r < 0) {
-        pos.y = r;
-        vel.y *= -1;
-    }
-    if (pos.y + r > screenHeight && pos.x < screenWidth/2 - HOLE_WIDTH && pos.x > screenWidth/2 + HOLE_WIDTH) {
-        pos.y = screenHeight - r;
-        vel.y *= -1;
-    }
-
-    // Adiciona gravidade
-    //vel.y += 0.1f; // Simula gravidade
-
-    // Aplica nova posição e velocidade ao player
-    b.x = pos.x;
-    b.y = pos.y;
-    // Limita a velocidade
-    vel.x = Clamp(vel.x, -5.0f, 5.0f);
-    vel.y = Clamp(vel.y, -5.0f, 5.0f);
-    b.vx = vel.x;
-    b.vy = vel.y;
-
-    for (auto& b : balls) {
         b.move();
         b.draw();
     }
-
     EndDrawing();
-    return game_state; // Retorna o estado do jogo 
-    }
+    return game_state; // Retorna o estado do jogo
 }
