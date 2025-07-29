@@ -1,4 +1,6 @@
 #include "game.h"
+#include "bumper.h"
+#include "utility.h"
 
 int HOLE_WIDTH = 100; // Largura do buraco na parede direita
 
@@ -27,6 +29,12 @@ Game::Game(float width, float height) {
 
 }
 
+void Game::loadPhase(const GamePhase& phase, player& p) {
+    this->p_walls = phase.walls;
+    this->bumpers = phase.bumpers;
+    p.setPosition(phase.initialBallPosition.x, phase.initialBallPosition.y);
+}
+
 // Função de menu (placeholder)
 Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p) {
 
@@ -48,15 +56,13 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
     if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
         mousePos.y >= screenHeight / 2 - 150 && mousePos.y <= screenHeight / 2 - 100) {
         
-        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
-        DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);  
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            strcpy(fase, "fase1");
-            p_walls = p1_walls;
-            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-            p.setPosition(100, 500); // Define a posição inicial do jogador 
-            return PLAYING; // Muda para o estado de jogo
-        }
+            DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
+            DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                strcpy(fase, "fase1");
+                loadPhase(p1_phase_data, p); // Carrega a fase 1 usando a nova estrutura
+                return PLAYING; // Muda para o estado de jogo
+            }
         
     }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
         mousePos.y >= screenHeight / 2 - 50 && mousePos.y <= screenHeight / 2) {
@@ -96,7 +102,7 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
             std::cout << "Key add: " << (char)key << std::endl;
             fase[letterCount] = (char)key;
             fase[letterCount+1] = '\0'; // Add null terminator at the end of the string.
-            //letterCount++;
+            letterCount++;
         }
         key = GetCharPressed();  
     }
@@ -119,25 +125,21 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
     if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
         mousePos.y >= screenHeight / 2 + 200 && mousePos.y <= screenHeight / 2 + 250) {
         
-        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 + 200, 300, 50}, 0.5,0, RAYWHITE);
-        DrawText("Play!", screenWidth / 2 - 25 , screenHeight / 2 + 215, 20, RED);  
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            // Define as paredes e posição inicial do jogador de acordo com a fase
-            if(strcmp(fase, "") == 0) {
-                strcpy(fase, "fase1");
-            } else if (strcmp(fase, "fase1") == 0) {
-                p_walls = p1_walls;
-                walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-                p.setPosition(100, 500); // Define a posição inicial do jogador
-            } else if (strcmp(fase, "fase2") == 0) {
-                p_walls = p2_walls;
-                walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-                p.setPosition(500, 500); // Define a posição inicial do jogador
-            } else {
-                std::cout << "Fase desconhecida: " << fase << std::endl;
+            DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 + 200, 300, 50}, 0.5,0, RAYWHITE);
+            DrawText("Play!", screenWidth / 2 - 25 , screenHeight / 2 + 215, 20, RED);
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                if(strcmp(fase, "") == 0 || strcmp(fase, "fase1") == 0) {
+                    strcpy(fase, "fase1");
+                    loadPhase(p1_phase_data, p); // Carrega a fase 1
+                } else if (strcmp(fase, "fase2") == 0) {
+                    loadPhase(p2_phase_data, p); // Carrega a fase 2
+                } else {
+                    std::cout << "Fase desconhecida: " << fase << std::endl;
+                    strcpy(fase, "fase1");
+                    loadPhase(p1_phase_data, p);
+                }
+                return PLAYING;
             }
-            return PLAYING; // Muda para o estado de jogo
-        }
         
     }
     
@@ -183,7 +185,13 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     }
     // Desenha obstáculos
     // TODO: fazer com que as paredes sejam desenhadas de acordo com a fase
-    for (auto &seg : p_walls) {
+    // Desenha as paredes FIXAS (bordas da tela)
+    for (auto &seg : walls) {
+        DrawLineV(seg.first, seg.second, RED);
+    }
+    
+    // Desenha as paredes ESPECÍFICAS DA FASE
+    for (auto &seg : p_walls) { 
         DrawLineV(seg.first, seg.second, RED);
     }
 
@@ -207,6 +215,50 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             break;
         }
     }
+
+    //colisao c paredes da fase
+    for (auto &seg : p_walls) { 
+        Vector2 cp, normal;
+        if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
+            PlaySound(Game::ball_collision);
+            float dot = Dot(vel, normal);
+            vel = Sub(vel, Scale(normal, 2 * dot));
+            pos = Add(cp, Scale(normal, r));
+            break; // importante p parar apos primeira colisao
+        }
+    }
+
+    // --- Colisão com Bumpers ---
+    float deltaTime = GetFrameTime(); // Tempo entre frames para animação
+    for (Bumper& bumper : bumpers) {
+        Vector2 normal;
+        Vector2 diff = Sub(pos, bumper.position); 
+        float distance = Length(diff); 
+        float minDistance = bumper.radius + r;
+        float penetration = 0.0f;
+
+        if (distance <= minDistance) {
+            normal = Normalize(diff); 
+            penetration = minDistance - distance;
+
+            bumper.onHit(); // Ativa o efeito visual do bumper
+            PlaySound(bumpsound); 
+
+            // Separação para evitar que a bola fique presa
+            pos = Add(pos, Scale(normal, penetration)); 
+
+            // Cálculo da reflexão (similar à parede, mas com um "impulso" extra)
+            float dot = Dot(vel, normal); 
+            vel = Sub(vel, Scale(normal, 2 * dot)); 
+
+            // Adiciona uma força extra ao refletir do bumper
+            float bumperForce = 3.0f; 
+            vel = Add(vel, Scale(normal, bumperForce)); 
+        }
+        bumper.update(deltaTime); // Atualiza a animação do bumper
+        bumper.draw(); // Desenha o bumper
+    }
+
 
     // Colar o fliper de pinball
     

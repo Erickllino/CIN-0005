@@ -4,6 +4,7 @@
 #include "player.h"
 #include "fases.h"
 #include "utility.h"
+#include "bumper.h"
 
 #include <utility>
 #include <iostream>
@@ -31,6 +32,7 @@ public:
     };
     
     Sound ball_collision = LoadSound("assets/sounds/collision.wav");
+    Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
 
     // Variáveis para os flipers
     Vector2 leftFlipperPos;
@@ -45,9 +47,12 @@ public:
     vector<pair<Vector2, Vector2>> p_walls;
     GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
 
+    std::vector<Bumper> bumpers; 
+
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
+    void loadPhase(const GamePhase& phase, player& p);
 
 };
 
