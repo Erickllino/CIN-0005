@@ -28,7 +28,7 @@ Game::Game(float width, float height) {
 }
 
 // Função de menu (placeholder)
-Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p) {
+Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE]) {
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -54,8 +54,10 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
             strcpy(fase, "fase1");
             p_walls = p1_walls;
             walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-            p.setPosition(100, 500); // Define a posição inicial do jogador 
-            return PLAYING; // Muda para o estado de jogo
+            balls.clear();
+            player mainBall(initialBallPos.x, initialBallPos.y, 10);
+            balls.push_back(mainBall);
+            return CHARACTER_SELECTION; // Muda para o estado de jogo
         }
         
     }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
@@ -65,7 +67,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
         DrawText("Continue", screenWidth / 2 - 50 , screenHeight / 2 - 35, 20, RED);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {    
             EndDrawing();  
-            return CONTINUE_MENU; 
+            return CHARACTER_SELECTION;; 
         }
         
 
@@ -78,7 +80,72 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
 
 }
 
-Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], player &p) {
+Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]) {
+    static int selectedCharacter = -1;
+    const int numCharacters = 6;
+
+    const char* characterNames[] = {
+        "Eitor (JoaoPintoBall)",
+        "Jessica (Jessball)",
+        "Heiji (LeBall)",
+        "Erick",
+        "Samira",
+        "Ivan"
+    };
+
+    const char* characterPowers[] = {
+        "- Controla Ball: controla a bola levemente",
+        "- Score Ball: pontuação 2x",
+        "- Trava Ball: protege para a bola não cair",
+        "- Slash Ball: causa dano ao redor",
+        "- Vamp Ball: recupera vida com impacto",
+        "- Duet Ball: invoca outras bolas (máx 4)"
+    };
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Selecione seu personagem", screenWidth / 2 - 150, 50, 20, WHITE);
+
+    Vector2 mousePos = GetMousePosition();
+
+    for (int i = 0; i < numCharacters; i++) {
+        Rectangle btn = { screenWidth / 2 - 200, 100 + i * 70, 400, 50 };
+        bool hovered = CheckCollisionPointRec(mousePos, btn);
+
+        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : DARKGRAY);
+        DrawText(characterNames[i], btn.x + 10, btn.y + 10, 20, RED);
+        DrawText(characterPowers[i], btn.x + 220, btn.y + 10, 16, WHITE);
+
+        if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            selectedCharacter = i;
+
+            // Aqui você pode usar selectedCharacter para definir o personagem no player p
+
+            strcpy(fase, "fase1");
+            p_walls = p1_walls;
+            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+            balls.clear();
+            player mainBall(initialBallPos.x, initialBallPos.y, 10);
+            mainBall.characterId = selectedCharacter;
+            balls.push_back(mainBall);
+
+            EndDrawing();
+            return PLAYING;
+        }
+    }
+
+    DrawText("Press ESC to voltar", screenWidth / 2 - 100, screenHeight - 30, 20, WHITE);
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        EndDrawing();
+        return MENU;
+    }
+
+    EndDrawing();
+    return game_state;
+}
+
+Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE]) {
     BeginDrawing();
     ClearBackground(BLACK);
     DrawText("Digite o codigo da fase", screenWidth / 2 - 125, screenHeight / 2 - 200, 20, WHITE);
@@ -128,11 +195,15 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
             } else if (strcmp(fase, "fase1") == 0) {
                 p_walls = p1_walls;
                 walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-                p.setPosition(100, 500); // Define a posição inicial do jogador
+                balls.clear();
+                player mainBall(initialBallPos.x, initialBallPos.y, 10);
+                balls.push_back(mainBall);
             } else if (strcmp(fase, "fase2") == 0) {
                 p_walls = p2_walls;
                 walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-                p.setPosition(500, 500); // Define a posição inicial do jogador
+                balls.clear();
+                player mainBall(initialBallPos.x, initialBallPos.y, 10);
+                balls.push_back(mainBall);
             } else {
                 std::cout << "Fase desconhecida: " << fase << std::endl;
             }
@@ -167,30 +238,54 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
 
 
 // Função principal de jogo
-Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
+Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
     BeginDrawing();
     ClearBackground(BLACK);
     
-    // Input
-    if (IsKeyDown(KEY_UP))    p.acelerate_y(-0.1f);
-    if (IsKeyDown(KEY_DOWN))  p.acelerate_y(0.1f);
-    if (IsKeyDown(KEY_LEFT))  p.acelerate_x(-0.1f);
-    if (IsKeyDown(KEY_RIGHT)) p.acelerate_x(0.1f);
-    if (IsKeyDown(KEY_SPACE)) {
-        float breakForce = 0.05;
-        p.vx -= p.vx * breakForce;
-        p.vy -= p.vy * breakForce;
+    if (balls.empty()) { // verifica se há bolas
+        EndDrawing();
+        return;
     }
+
+    player& mainBall = balls[0];
+
+    // Começando a colocar os poderes aqui, já que a bola era controlada aqui
+    if (mainBall.characterId == 0) {
+        if (IsKeyDown(KEY_UP))    mainBall.acelerate_y(-0.1f);
+        if (IsKeyDown(KEY_DOWN))  mainBall.acelerate_y(0.1f);
+        if (IsKeyDown(KEY_LEFT))  mainBall.acelerate_x(-0.1f);
+        if (IsKeyDown(KEY_RIGHT)) mainBall.acelerate_x(0.1f);
+        if (IsKeyDown(KEY_SPACE)) {
+            float breakForce = 0.05f;
+            mainBall.vx -= mainBall.vx * breakForce;
+            mainBall.vy -= mainBall.vy * breakForce;
+        }
+    }
+    
+    // Duet Ball apenas ativado na tecla D para testes
+    if (mainBall.characterId == 5 && IsKeyPressed(KEY_D)) {
+        if (balls.size() < 4) {
+            player newBall = mainBall; // Copia a bola principal
+            newBall.x += GetRandomValue(-30, 30);
+            newBall.y += GetRandomValue(-30, 30);
+            newBall.vx = GetRandomValue(-3, 3);
+            newBall.vy = GetRandomValue(-3, 3);
+            balls.push_back(newBall);
+        }
+    }
+   
+
     // Desenha obstáculos
     // TODO: fazer com que as paredes sejam desenhadas de acordo com a fase
     for (auto &seg : p_walls) {
         DrawLineV(seg.first, seg.second, RED);
     }
 
-    // Atualiza posição
-    Vector2 pos = {p.x, p.y};
-    Vector2 vel = {p.vx, p.vy};
-    float r = p.radius;
+    // Atualiza posição e verifica colisao com paredes
+    for (auto& b : balls) {
+    Vector2 pos = { b.x, b.y };
+    Vector2 vel = { b.vx, b.vy };
+    float r = b.radius;
 
     if (pos.y - 2 * r > screenHeight) {
         game_state = SCOREBOARD; // Se cair no buraco, game over
@@ -199,11 +294,10 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     for (auto &seg : walls) {
         Vector2 cp, normal;
         if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
-            PlaySound(Game::ball_collision); // Toca som de colisão
+            PlaySound(ball_collision); // Som
             float dot = Dot(vel, normal);
             vel = Sub(vel, Scale(normal, 2 * dot));
             pos = Add(cp, Scale(normal, r));
-            //vel = Scale(vel, 0.8f); // Aplica um fator de atrito
             break;
         }
     }
@@ -305,17 +399,20 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     //vel.y += 0.1f; // Simula gravidade
 
     // Aplica nova posição e velocidade ao player
-    p.x = pos.x;
-    p.y = pos.y;
+    b.x = pos.x;
+    b.y = pos.y;
     // Limita a velocidade
     vel.x = Clamp(vel.x, -5.0f, 5.0f);
     vel.y = Clamp(vel.y, -5.0f, 5.0f);
-    p.vx = vel.x;
-    p.vy = vel.y;
+    b.vx = vel.x;
+    b.vy = vel.y;
 
-    p.move();   // atualiza a posição com a velocidade
-    p.draw();   // desenha o jogador
+    for (auto& b : balls) {
+        b.move();
+        b.draw();
+    }
 
     EndDrawing();
-    return game_state; // Retorna o estado do jogo
+    return game_state; // Retorna o estado do jogo 
+    }
 }

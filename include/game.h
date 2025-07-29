@@ -22,7 +22,7 @@ public:
 
     enum GameState {
         MENU,
-        SELECT_CARACTER,
+        CHARACTER_SELECTION,
         PLAYING,
         SCOREBOARD,
         PAUSED,
@@ -30,6 +30,9 @@ public:
         CONTINUE_MENU
     };
     
+    std::vector<player> balls;
+    Vector2 initialBallPos = {100, 500};
+
     Sound ball_collision = LoadSound("assets/sounds/collision.wav");
 
     // Variáveis para os flipers
@@ -43,11 +46,11 @@ public:
 
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
-    GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState play_step(GameState game_state, char fase[CODE_SIZE]);
 
-    GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
-    GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
-    GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState menu(GameState game_state, char fase[CODE_SIZE]);
+    GameState continue_menu(GameState game_state, char fase[CODE_SIZE]);
+    GameState selectCharacter(GameState game_state, char fase[CODE_SIZE]);
 
 };
 
