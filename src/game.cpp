@@ -20,7 +20,7 @@ Game::Game(float width, float height) {
     };
 
     // Inicializa variáveis dos flipers
-    flipperLength = 80.0f;
+    flipperLength = 90.0f;
     leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
     rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
     leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
@@ -129,8 +129,6 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
 
             // Aqui você pode usar selectedCharacter para definir o personagem no player p
 
-            strcpy(fase, "fase1");
-            loadPhase(p1_phase_data, p); // Carrega a fase 1
             balls.clear();
             player mainBall(initialBallPos.x, initialBallPos.y, 10);
             mainBall.characterId = selectedCharacter;
@@ -347,10 +345,10 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     };
 
     // Desenha os flipers
-    DrawLineEx(leftFlipperPos, leftFlipperEnd, 8.0f, leftFlipperPressed ? YELLOW : WHITE);
-    DrawLineEx(rightFlipperPos, rightFlipperEnd, 8.0f, rightFlipperPressed ? YELLOW : WHITE);
-    DrawCircleV(leftFlipperPos, 6.0f, GRAY);   // Ponto de rotação
-    DrawCircleV(rightFlipperPos, 6.0f, GRAY);  // Ponto de rotação
+    DrawLineEx(leftFlipperPos, leftFlipperEnd, 20.0f, leftFlipperPressed ? YELLOW : WHITE);
+    DrawLineEx(rightFlipperPos, rightFlipperEnd, 20.0f, rightFlipperPressed ? YELLOW : WHITE);
+    DrawCircleV(leftFlipperPos, 10.0f, GRAY);   // Ponto de rotação
+    DrawCircleV(rightFlipperPos, 10.0f, GRAY);  // Ponto de rotação
 
     player& mainBall = balls[0];
 

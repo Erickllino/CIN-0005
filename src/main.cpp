@@ -2,9 +2,9 @@
 
 #include "game.h"
 
-
-float screenWidth = 800.0;
-float screenHeight = 600.0;
+// ajustado o tamanho da janela
+float screenWidth = 1280.0;
+float screenHeight = 800.0;
 
 
 int main() {
