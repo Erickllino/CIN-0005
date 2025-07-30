@@ -6,5 +6,8 @@
             "binaryArgs": []
         }
     ],
-    "cmake.sourceDirectory": "/home/yienvee/Desktop/Faculdade/CIN-0005/external/raylib"
+    "cmake.sourceDirectory": "/home/yienvee/Desktop/Faculdade/CIN-0005/external/raylib",
+    "files.associations": {
+        "cfloat": "cpp"
+    }
 }

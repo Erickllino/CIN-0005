@@ -3,11 +3,11 @@ import numpy as np
 
 
 # tamanho da imagem padrão
-FALLBACK_WIDTH  = 800
-FALLBACK_HEIGHT = 600
+FALLBACK_WIDTH  = 1280
+FALLBACK_HEIGHT = 800
 
 # caminho do seu PNG
-IMAGE_PATH = 'mapa.png'
+IMAGE_PATH = '/mnt/c/Users/samir/Downloads/teste.png'
 # arquivo de saída
 OUT_PATH   = 'Map_editor/walls.txt'
 
