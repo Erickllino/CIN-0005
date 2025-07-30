@@ -67,12 +67,9 @@ public:
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
-<<<<<<< HEAD
 	GameState cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p);
-=======
     void loadPhase(const GamePhase& phase, player& p);
     GameState selectCharacter(GameState game_state, char fase[CODE_SIZE], player &p);
->>>>>>> 42bf388eb0f9861d929b17a37d17dc230a474b8d
 
 };
 

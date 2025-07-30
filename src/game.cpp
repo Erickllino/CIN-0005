@@ -83,7 +83,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
                 balls.clear();
                 loadPhase(p1_phase_data, p); // Carrega a fase 1
                 balls.push_back(p);
-                return CHARACTER_SELECTION; // Muda para o estado de seleção de personagem
+                return CINEMATIC; // Muda para o estado cinematográfico
             }
         
     }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
@@ -301,11 +301,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
             break;
         default:
             // Fim da cinemática, transita para o jogo
-            strcpy(fase, "fase1");
-            p_walls = p1_walls;
-            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-            p.setPosition(100, 500); // Define a posição inicial do jogador 
-            return PLAYING;
+            timer = 0.0f;
+            return CHARACTER_SELECTION;
     }
 
     if (timer >= frameDuration) {
@@ -315,11 +312,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
 
     // Pular cinemática com ENTER
     if (IsKeyPressed(KEY_ENTER)) {
-        strcpy(fase, "fase1");
-        p_walls = p1_walls;
-        walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-        p.setPosition(100, 500);
-        return PLAYING;
+        timer = 0.0f;
+        return CHARACTER_SELECTION;
     }
     DrawText("Pressione ENTER para pular", screenWidth - 200, screenHeight - 20, 10, WHITE);
 
@@ -549,7 +543,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             pos.y = r;
             vel.y *= -1;
         }
-        if (pos.y + r > screenHeight && (pos.x < screenWidth/2 - HOLE_WIDTH || pos.x > screenWidth/2 + HOLE_WIDTH)) {
+        if (pos.y + r > screenHeight && (pos.x < 800.0f - HOLE_WIDTH || pos.x > 800.0f + HOLE_WIDTH)) {
             pos.y = screenHeight - r;
             vel.y *= -1;
         }
