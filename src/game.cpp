@@ -17,7 +17,7 @@ Game::Game(float width, float height) {
     };
 
     // Inicializa variáveis dos flipers
-    flipperLength = 80.0f;
+    flipperLength = 90.0f;
     leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
     rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
     leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
@@ -54,7 +54,10 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
             strcpy(fase, "fase1");
             p_walls = p1_walls;
             walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-            p.setPosition(100, 500); // Define a posição inicial do jogador 
+            // nova posicao do flipper para ficar centralizado dentro do mapa
+            leftFlipperPos = { 678.0f, 674.0f }; 
+            rightFlipperPos = { 910.0f, 676.0f };
+            p.setPosition(1174, 788); // posicao inical do jogador no lancador
             return PLAYING; // Muda para o estado de jogo
         }
         
@@ -277,10 +280,10 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     }
     
     // Desenha os flipers
-    DrawLineEx(leftFlipperPos, leftFlipperEnd, 8.0f, leftFlipperPressed ? YELLOW : WHITE);
-    DrawLineEx(rightFlipperPos, rightFlipperEnd, 8.0f, rightFlipperPressed ? YELLOW : WHITE);
-    DrawCircleV(leftFlipperPos, 6.0f, GRAY);   // Ponto de rotação
-    DrawCircleV(rightFlipperPos, 6.0f, GRAY);  // Ponto de rotação
+    DrawLineEx(leftFlipperPos, leftFlipperEnd, 20.0f, leftFlipperPressed ? YELLOW : WHITE);
+    DrawLineEx(rightFlipperPos, rightFlipperEnd, 20.0f, rightFlipperPressed ? YELLOW : WHITE);
+    DrawCircleV(leftFlipperPos, 10.0f, GRAY);   // Ponto de rotação
+    DrawCircleV(rightFlipperPos, 10.0f, GRAY);  // Ponto de rotação
 
 
     // Verifica bordas da tela para evitar sair da tela mesmo com colisão
