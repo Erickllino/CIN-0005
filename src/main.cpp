@@ -27,6 +27,11 @@ int main() {
       case Game::MENU:
         game_state = game.menu(game_state, fase, p);
         break;
+      
+      case Game::CHARACTER_SELECTION:
+        game_state = game.selectCharacter(game_state, fase, p); // ← função nova
+        break;
+
       case Game::PLAYING:
         game_state = game.play_step(game_state, fase, p);
         break;
@@ -66,6 +71,7 @@ int main() {
       paused = 10; // Reset pause counter
       game_state = Game::PAUSED; // Change to paused state
     }
+    
   }
 
   UnloadSound(game.ball_collision);

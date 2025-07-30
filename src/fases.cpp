@@ -66,3 +66,35 @@ vector<pair<Vector2, Vector2>> p2_walls = {
     {{1132, 795}, {1065, 149}},
     {{1132, 795}, {1217, 796}},
 };
+
+
+#include "fases.h"
+
+// Definição da Fase 1
+GamePhase p1_phase_data = {
+    // Paredes da Fase 1 (usando os dados que você já tinha)
+    {p1_walls},
+    // Bumpers da Fase 1 (adicionados aqui)
+    {
+        Bumper({200, 200}, 25.0f, BLUE),    // Exemplo de bumper 1
+        Bumper({500, 250}, 20.0f, GREEN),    // Exemplo de bumper 2
+        Bumper({350, 150}, 30.0f, YELLOW)    // Exemplo de bumper 3
+    },
+    // Posição inicial da bola para Fase 1
+    {100, 500}
+};
+
+// Definição da Fase 2
+GamePhase p2_phase_data = {
+    // Paredes da Fase 2 (usando os dados que você já tinha)
+    {p2_walls},
+    // Bumpers da Fase 2 (adicionados aqui)
+    {
+        Bumper({400, 200}, 30.0f, RED),
+        Bumper({250, 350}, 20.0f, PURPLE),
+        Bumper({550, 350}, 20.0f, ORANGE),
+        Bumper({400, 450}, 25.0f, DARKBLUE)
+    },
+    // Posição inicial da bola para Fase 2
+    {100, 500}
+};

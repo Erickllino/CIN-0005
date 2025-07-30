@@ -9,6 +9,7 @@ private:
 public:
     player(float x,float y, int radius);
     int radius = 10;
+    int characterId = -1; // ID do personagem selecionado
     float x, y;
     float vx, vy;
     void draw();
