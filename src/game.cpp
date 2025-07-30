@@ -14,7 +14,8 @@ Game::Game(float width, float height) {
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{screenWidth/2 - HOLE_WIDTH, screenHeight}, {screenWidth/2 + HOLE_WIDTH, screenHeight}},  // Fundo
+        {{0, screenHeight}, {screenWidth/2 - HOLE_WIDTH, screenHeight}},  // Fundo
+        {{screenWidth/2 + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
@@ -36,7 +37,7 @@ void Game::loadPhase(const GamePhase& phase, player& p) {
 }
 
 // Função de menu (placeholder)
-Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE]) {
+Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p) {
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -60,6 +61,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE]) {
             DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 strcpy(fase, "fase1");
+                loadPhase(p1_phase_data, p); // Carrega a fase 1
                 balls.clear();
                 player mainBall(initialBallPos.x, initialBallPos.y, 10);
                 balls.push_back(mainBall);
@@ -71,9 +73,9 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE]) {
         
         DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, RAYWHITE);
         DrawText("Continue", screenWidth / 2 - 50 , screenHeight / 2 - 35, 20, RED);
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {    
-            EndDrawing();  
-            return CHARACTER_SELECTION;; 
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            EndDrawing();
+            return CONTINUE_MENU;
         }
         
 
@@ -86,7 +88,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE]) {
 
 }
 
-Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]) {
+Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE], player &p) {
     static int selectedCharacter = -1;
     const int numCharacters = 6;
 
@@ -128,8 +130,7 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
             // Aqui você pode usar selectedCharacter para definir o personagem no player p
 
             strcpy(fase, "fase1");
-            p_walls = p1_walls;
-            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+            loadPhase(p1_phase_data, p); // Carrega a fase 1
             balls.clear();
             player mainBall(initialBallPos.x, initialBallPos.y, 10);
             mainBall.characterId = selectedCharacter;
@@ -151,7 +152,7 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
     return game_state;
 }
 
-Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE]) {
+Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
     DrawText("Digite o codigo da fase", screenWidth / 2 - 125, screenHeight / 2 - 200, 20, WHITE);
@@ -214,7 +215,7 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE]) 
                     player mainBall(initialBallPos.x, initialBallPos.y, 10);
                     balls.push_back(mainBall);
                 }
-                return PLAYING;
+                return CHARACTER_SELECTION; 
             }
         
     }
@@ -229,7 +230,7 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE]) 
     return game_state; // Retorna o estado do jogo
 }
 
-Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE]) {
+Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
     DrawText("Scoreboard Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, WHITE);
@@ -245,7 +246,7 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE]) {
 
 
 // Função principal de jogo
-Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
+Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
     
@@ -265,65 +266,44 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
         DrawLineV(seg.first, seg.second, RED);
     }
 
-    // Atualiza posição
-    Vector2 pos = {p.x, p.y};
-    Vector2 vel = {p.vx, p.vy};
-    float r = p.radius;
-
-    if (pos.y - 2 * r > screenHeight) {
-        game_state = SCOREBOARD; // Se cair no buraco, game over
-    }
-    // Verifica colisão com paredes
-    for (auto &seg : walls) {
-        Vector2 cp, normal;
-        if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
-            PlaySound(Game::ball_collision); // Toca som de colisão
-            float dot = Dot(vel, normal);
-            vel = Sub(vel, Scale(normal, 2 * dot));
-            pos = Add(cp, Scale(normal, r));
-            //vel = Scale(vel, 0.8f); // Aplica um fator de atrito
-            break;
-        }
-    }
-
-    //colisao c paredes da fase
-    for (auto &seg : p_walls) { 
-        Vector2 cp, normal;
-        if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
-            PlaySound(Game::ball_collision);
-            float dot = Dot(vel, normal);
-            vel = Sub(vel, Scale(normal, 2 * dot));
-            pos = Add(cp, Scale(normal, r));
-            break; // importante p parar apos primeira colisao
-        }
-    }
-
     // --- Colisão com Bumpers ---
     float deltaTime = GetFrameTime(); // Tempo entre frames para animação
     for (Bumper& bumper : bumpers) {
-        Vector2 normal;
-        Vector2 diff = Sub(pos, bumper.position); 
-        float distance = Length(diff); 
-        float minDistance = bumper.radius + r;
-        float penetration = 0.0f;
+        // Verifica colisão de todas as bolas com este bumper
+        for (auto& ball : balls) {
+            Vector2 ballPos = {ball.x, ball.y};
+            Vector2 ballVel = {ball.vx, ball.vy};
+            float ballRadius = ball.radius;
+            
+            Vector2 normal;
+            Vector2 diff = Sub(ballPos, bumper.position); 
+            float distance = Length(diff); 
+            float minDistance = bumper.radius + ballRadius;
+            float penetration = 0.0f;
 
-        if (distance <= minDistance) {
-            normal = Normalize(diff); 
-            penetration = minDistance - distance;
+            if (distance <= minDistance) {
+                normal = Normalize(diff); 
+                penetration = minDistance - distance;
 
-            bumper.onHit(); // Ativa o efeito visual do bumper
-            PlaySound(bumpsound); 
+                bumper.onHit(); // Ativa o efeito visual do bumper
+                PlaySound(bumpsound); 
 
-            // Separação para evitar que a bola fique presa
-            pos = Add(pos, Scale(normal, penetration)); 
+                // Separação para evitar que a bola fique presa
+                ballPos = Add(ballPos, Scale(normal, penetration)); 
+                ball.x = ballPos.x;
+                ball.y = ballPos.y;
 
-            // Cálculo da reflexão (similar à parede, mas com um "impulso" extra)
-            float dot = Dot(vel, normal); 
-            vel = Sub(vel, Scale(normal, 2 * dot)); 
+                // Cálculo da reflexão (similar à parede, mas com um "impulso" extra)
+                float dot = Dot(ballVel, normal); 
+                ballVel = Sub(ballVel, Scale(normal, 2 * dot)); 
 
-            // Adiciona uma força extra ao refletir do bumper
-            float bumperForce = 3.0f; 
-            vel = Add(vel, Scale(normal, bumperForce)); 
+                // Adiciona uma força extra ao refletir do bumper
+                float bumperForce = 3.0f; 
+                ballVel = Add(ballVel, Scale(normal, bumperForce)); 
+                
+                ball.vx = ballVel.x;
+                ball.vy = ballVel.y;
+            }
         }
         bumper.update(deltaTime); // Atualiza a animação do bumper
         bumper.draw(); // Desenha o bumper
@@ -400,32 +380,44 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
     }
    
 
-    // Desenha obstáculos
-    // TODO: fazer com que as paredes sejam desenhadas de acordo com a fase
-    for (auto &seg : p_walls) {
-        DrawLineV(seg.first, seg.second, RED);
-    }
-
     // Atualiza posição e verifica colisao com paredes
     for (auto& b : balls) {
         Vector2 pos = { b.x, b.y };
         Vector2 vel = { b.vx, b.vy };
         float r = b.radius;
 
-        if (b.y - 2 * r > screenHeight) {
+        // Adiciona gravidade primeiro
+        vel.y += 0.1f; // Simula gravidade
+
+        // Aplica movimento
+        pos.x += vel.x;
+        pos.y += vel.y;
+
+        if (pos.y - r > screenHeight) {
             game_state = SCOREBOARD; // Se cair no buraco, game over
         }
-        // Verifica colisão com paredes
+        
+        // Verifica colisão com paredes fixas
         for (auto &seg : walls) {
             Vector2 cp, normal;
             if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
                 PlaySound(ball_collision); // Som
                 float dot = Dot(vel, normal);
                 vel = Sub(vel, Scale(normal, 2 * dot));
-                Vector2 newPos = Add(cp, Scale(normal, r));
-                b.x = newPos.x;
-                b.y = newPos.y;
+                pos = Add(cp, Scale(normal, r));
                 break;
+            }
+        }
+
+        // Verifica colisão com paredes da fase
+        for (auto &seg : p_walls) { 
+            Vector2 cp, normal;
+            if (CheckCollisionCircleLine(pos, r, seg.first, seg.second, cp, normal)) {
+                PlaySound(ball_collision);
+                float dot = Dot(vel, normal);
+                vel = Sub(vel, Scale(normal, 2 * dot));
+                pos = Add(cp, Scale(normal, r));
+                break; // importante p parar apos primeira colisao
             }
         }
 
@@ -434,12 +426,10 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
     
         // Colisão com fliper esquerdo
         if (CheckCollisionCircleLine(pos, r, leftFlipperPos, leftFlipperEnd, cp, normal)) {
-            PlaySound(Game::ball_collision);
+            PlaySound(ball_collision);
             float dot = Dot(vel, normal);
             vel = Sub(vel, Scale(normal, 2 * dot));
-            Vector2 newPos = Add(cp, Scale(normal, r));
-            b.x = newPos.x;
-            b.y = newPos.y;
+            pos = Add(cp, Scale(normal, r));
             
             // Adiciona força extra se o fliper estiver sendo acionado
             if (leftFlipperPressed) {
@@ -450,12 +440,10 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
     
         // Colisão com fliper direito
         if (CheckCollisionCircleLine(pos, r, rightFlipperPos, rightFlipperEnd, cp, normal)) {
-            PlaySound(Game::ball_collision);
+            PlaySound(ball_collision);
             float dot = Dot(vel, normal);
             vel = Sub(vel, Scale(normal, 2 * dot));
-            Vector2 newPos = Add(cp, Scale(normal, r));
-            b.x = newPos.x;
-            b.y = newPos.y;
+            pos = Add(cp, Scale(normal, r));
             
             // Adiciona força extra se o fliper estiver sendo acionado
             if (rightFlipperPressed) {
@@ -463,41 +451,35 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE]) {
                 vel = Add(vel, flipperForce);
             }
         }
-    
-
-
 
         // Verifica bordas da tela para evitar sair da tela mesmo com colisão
-        if (b.x - r < 0) {
-            b.x = r;
+        if (pos.x - r < 0) {
+            pos.x = r;
             vel.x *= -1;
         }
-        if (b.x + r > screenWidth) {
-            b.x = screenWidth - r;
+        if (pos.x + r > screenWidth) {
+            pos.x = screenWidth - r;
             vel.x *= -1;
         }
-        if (b.y - r < 0) {
-            b.y = r;
+        if (pos.y - r < 0) {
+            pos.y = r;
             vel.y *= -1;
         }
-        if (b.y + r > screenHeight && (b.x < screenWidth/2 - HOLE_WIDTH || b.x > screenWidth/2 + HOLE_WIDTH)) {
-            b.y = screenHeight - r;
+        if (pos.y + r > screenHeight && (pos.x < screenWidth/2 - HOLE_WIDTH || pos.x > screenWidth/2 + HOLE_WIDTH)) {
+            pos.y = screenHeight - r;
             vel.y *= -1;
         }
 
-        // Adiciona gravidade
-        vel.y += 0.1f; // Simula gravidade
+        // Limita a velocidade
+        vel.x = Clamp(vel.x, -8.0f, 8.0f);
+        vel.y = Clamp(vel.y, -8.0f, 8.0f);
 
-        // Aplica nova posição e velocidade ao player
+        // Aplica a nova posição e velocidade ao objeto
         b.x = pos.x;
         b.y = pos.y;
-        // Limita a velocidade
-        vel.x = Clamp(vel.x, -5.0f, 5.0f);
-        vel.y = Clamp(vel.y, -5.0f, 5.0f);
         b.vx = vel.x;
         b.vy = vel.y;
         
-        b.move();
         b.draw();
     }
     EndDrawing();

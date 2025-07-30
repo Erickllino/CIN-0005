@@ -25,19 +25,19 @@ int main() {
     
     switch (game_state) {
       case Game::MENU:
-        game_state = game.menu(game_state, fase);
+        game_state = game.menu(game_state, fase, p);
         break;
       
       case Game::CHARACTER_SELECTION:
-        game_state = game.selectCharacter(game_state, fase); // ← função nova
+        game_state = game.selectCharacter(game_state, fase, p); // ← função nova
         break;
 
       case Game::PLAYING:
-        game_state = game.play_step(game_state, fase);
+        game_state = game.play_step(game_state, fase, p);
         break;
       case Game::SCOREBOARD:
         // Placeholder for scoreboard logic
-        game_state = game.Scoreboard(game_state, fase);
+        game_state = game.Scoreboard(game_state, fase, p);
         break;
       case Game::GAME_OVER:
         // Placeholder for game over logic
@@ -49,7 +49,7 @@ int main() {
         break;
       case Game::CONTINUE_MENU:
         // TODO: Implement continue menu logic
-        game_state = game.continue_menu(game_state, fase);
+        game_state = game.continue_menu(game_state, fase, p);
         break;
       case Game::PAUSED:
         BeginDrawing();
