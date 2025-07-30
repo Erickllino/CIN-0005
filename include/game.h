@@ -32,7 +32,7 @@ public:
     };
     
     std::vector<player> balls;
-    Vector2 initialBallPos = {100, 500};
+    Vector2 initialBallPos = {1000, 500};
 
     Sound ball_collision = LoadSound("assets/sounds/collision.wav");
     Sound bumpsound = LoadSound("assets/sounds/bumper.wav");

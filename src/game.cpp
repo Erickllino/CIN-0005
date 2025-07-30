@@ -2,7 +2,7 @@
 #include "bumper.h"
 #include "utility.h"
 
-int HOLE_WIDTH = 100; // Largura do buraco na parede direita
+float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 
 // Inicializa o jogo com paredes de borda e paredes internas
 Game::Game(float width, float height) {
@@ -14,15 +14,15 @@ Game::Game(float width, float height) {
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {screenWidth/2 - HOLE_WIDTH, screenHeight}},  // Fundo
-        {{screenWidth/2 + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
+        {{0, screenHeight}, {800.0 - HOLE_WIDTH, screenHeight}},  // Fundo
+        {{800.0 + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
     // Inicializa variáveis dos flipers
     flipperLength = 90.0f;
-    leftFlipperPos = {screenWidth * 0.35f, screenHeight - 100.0f};
-    rightFlipperPos = {screenWidth * 0.65f, screenHeight - 100.0f};
+    leftFlipperPos = {700, screenHeight - 60.0f};
+    rightFlipperPos = {900, screenHeight - 60.0f};
     leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
     rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
     leftFlipperPressed = false;
@@ -61,10 +61,9 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
             DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 strcpy(fase, "fase1");
-                loadPhase(p1_phase_data, p); // Carrega a fase 1
                 balls.clear();
-                player mainBall(initialBallPos.x, initialBallPos.y, 10);
-                balls.push_back(mainBall);
+                loadPhase(p1_phase_data, p); // Carrega a fase 1
+                balls.push_back(p);
                 return CHARACTER_SELECTION; // Muda para o estado de seleção de personagem
             }
         
@@ -128,11 +127,12 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
             selectedCharacter = i;
 
             // Aqui você pode usar selectedCharacter para definir o personagem no player p
-
-            balls.clear();
-            player mainBall(initialBallPos.x, initialBallPos.y, 10);
-            mainBall.characterId = selectedCharacter;
-            balls.push_back(mainBall);
+            p.characterId = selectedCharacter;
+            
+            // Atualiza também o characterId na bola que está no vetor balls
+            if (!balls.empty()) {
+                balls[0].characterId = selectedCharacter;
+            }
 
             EndDrawing();
             return PLAYING;
@@ -196,22 +196,19 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 if(strcmp(fase, "") == 0 || strcmp(fase, "fase1") == 0) {
                     strcpy(fase, "fase1");
+                    balls.clear();
                     loadPhase(p1_phase_data, p); // Carrega a fase 1
-                    balls.clear();
-                    player mainBall(initialBallPos.x, initialBallPos.y, 10);
-                    balls.push_back(mainBall);
+                    balls.push_back(p);
                 } else if (strcmp(fase, "fase2") == 0) {
-                    loadPhase(p2_phase_data, p); // Carrega a fase 2
                     balls.clear();
-                    player mainBall(initialBallPos.x, initialBallPos.y, 10);
-                    balls.push_back(mainBall);
+                    loadPhase(p2_phase_data, p); // Carrega a fase 2
+                    balls.push_back(p);
                 } else {
                     std::cout << "Fase desconhecida: " << fase << std::endl;
                     strcpy(fase, "fase1");
-                    loadPhase(p1_phase_data, p);
                     balls.clear();
-                    player mainBall(initialBallPos.x, initialBallPos.y, 10);
-                    balls.push_back(mainBall);
+                    loadPhase(p1_phase_data, p);
+                    balls.push_back(p);
                 }
                 return CHARACTER_SELECTION; 
             }
@@ -350,25 +347,25 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     DrawCircleV(leftFlipperPos, 10.0f, GRAY);   // Ponto de rotação
     DrawCircleV(rightFlipperPos, 10.0f, GRAY);  // Ponto de rotação
 
-    player& mainBall = balls[0];
 
+    
     // Começando a colocar os poderes aqui, já que a bola era controlada aqui
-    if (mainBall.characterId == 0) {
-        if (IsKeyDown(KEY_UP))    mainBall.acelerate_y(-0.1f);
-        if (IsKeyDown(KEY_DOWN))  mainBall.acelerate_y(0.1f);
-        if (IsKeyDown(KEY_LEFT))  mainBall.acelerate_x(-0.1f);
-        if (IsKeyDown(KEY_RIGHT)) mainBall.acelerate_x(0.1f);
+    if (balls[0].characterId == 0) {
+        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
+        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
+        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
+        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
         if (IsKeyDown(KEY_SPACE)) {
             float breakForce = 0.05f;
-            mainBall.vx -= mainBall.vx * breakForce;
-            mainBall.vy -= mainBall.vy * breakForce;
+            balls[0].vx -= balls[0].vx * breakForce;
+            balls[0].vy -= balls[0].vy * breakForce;
         }
     }
     
     // Duet Ball apenas ativado na tecla D para testes
-    if (mainBall.characterId == 5 && IsKeyPressed(KEY_D)) {
+    if (balls[0].characterId == 5 && IsKeyPressed(KEY_D)) {
         if (balls.size() < 4) {
-            player newBall = mainBall; // Copia a bola principal
+            player newBall = balls[0]; // Copia a bola principal
             newBall.x += GetRandomValue(-30, 30);
             newBall.y += GetRandomValue(-30, 30);
             newBall.vx = GetRandomValue(-3, 3);
@@ -385,7 +382,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         float r = b.radius;
 
         // Adiciona gravidade primeiro
-        vel.y += 0.1f; // Simula gravidade
+        //vel.y += 0.1f; // Simula gravidade
 
         // Aplica movimento
         pos.x += vel.x;
