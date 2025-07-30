@@ -25,8 +25,8 @@ Game::Game(float width, float height) {
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {800.0 - HOLE_WIDTH, screenHeight}},  // Fundo
-        {{800.0 + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
+        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo
+        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
