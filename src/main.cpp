@@ -27,6 +27,9 @@ int main() {
       case Game::MENU:
         game_state = game.menu(game_state, fase, p);
         break;
+      case Game::CINEMATIC: 
+        game_state = game.cinematic_step(game_state, fase, p);
+        break;
       case Game::PLAYING:
         game_state = game.play_step(game_state, fase, p);
         break;

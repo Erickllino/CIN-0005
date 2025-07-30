@@ -13,9 +13,20 @@
 
 class Game {
 private:
+	//texturas para dar load 
+	Texture2D alienship;
+	Texture2D alienPinball;
+	Texture2D pinballBall;
+
+	int frame;
+	float timer;
+	float frameDuration;
+
+    //Music cinematicMusic;
 
 public:
     Game(float screenWidth, float screenHeight);
+	~Game(); //descarrega textura
     
     float screenWidth = 800;
     float screenHeight = 600;
@@ -24,6 +35,7 @@ public:
         MENU,
         SELECT_CARACTER,
         PLAYING,
+		CINEMATIC,
         SCOREBOARD,
         PAUSED,
         GAME_OVER,
@@ -48,6 +60,7 @@ public:
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
+	GameState cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p);
 
 };
 

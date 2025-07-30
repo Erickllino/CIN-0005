@@ -7,7 +7,18 @@ Game::Game(float width, float height) {
     screenWidth = width;
     screenHeight = height;
 
-    
+	//carrega textura
+	alienship = LoadTexture("assets/images/alienship.png");
+	alienPinball = LoadTexture("assets/images/alienpinball.png");
+	pinballBall = LoadTexture("assets/images/pinballBall.png");
+
+	frame = 0;
+	timer = 0.0f;
+	frameDuration = 5.0f;
+
+    //cinematicMusic = LoadMusicStream("assets/sounds/cinematic_music.mp3");
+    //SetMusicVolume(cinematicMusic, 0.5f);
+
     // Paredes externas
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
@@ -25,6 +36,14 @@ Game::Game(float width, float height) {
     leftFlipperPressed = false;
     rightFlipperPressed = false;
 
+}
+
+//descarrega texturas e musica
+Game::~Game() {
+	UnloadTexture(alienship);
+	UnloadTexture(alienPinball);
+	UnloadTexture(pinballBall);
+    //UnloadMusicStream(cinematicMusic);
 }
 
 // Função de menu (placeholder)
@@ -51,11 +70,9 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
         DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
         DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);  
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            strcpy(fase, "fase1");
-            p_walls = p1_walls;
-            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-            p.setPosition(100, 500); // Define a posição inicial do jogador 
-            return PLAYING; // Muda para o estado de jogo
+            frame = 0;
+            timer = 0.0f;
+            return CINEMATIC;
         }
         
     }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
@@ -163,6 +180,76 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
     EndDrawing();
     
     return game_state; // Retorna o estado do jogo
+}
+
+Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p) {
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    timer += GetFrameTime();
+
+    switch (frame) {
+        case 0:
+            // Imagem da nave alienígena chegando (redimensionada para caber na tela)
+            {
+                float scaleX = screenWidth * 0.8f / alienship.width;
+                float scaleY = screenHeight * 0.8f / alienship.height;
+                float scale = fminf(scaleX, scaleY); // Mantém proporção
+                Vector2 pos = {screenWidth / 2 - (alienship.width * scale) / 2, screenHeight / 2 - (alienship.height * scale) / 2};
+                DrawTextureEx(alienship, pos, 0.0f, scale, WHITE);
+            }
+            DrawText("Aliens invadiram a Terra!", screenWidth / 2 - MeasureText("Aliens invadiram a Terra!", 20) / 2, screenHeight - 80, 20, WHITE);
+            break;
+        case 1:
+            // Imagem dos aliens perto de um pinball (redimensionada para caber na tela)
+            {
+                float scaleX = screenWidth * 0.8f / alienPinball.width;
+                float scaleY = screenHeight * 0.8f / alienPinball.height;
+                float scale = fminf(scaleX, scaleY); // Mantém proporção
+                Vector2 pos = {screenWidth / 2 - (alienPinball.width * scale) / 2, screenHeight / 2 - (alienPinball.height * scale) / 2};
+                DrawTextureEx(alienPinball, pos, 0.0f, scale, WHITE);
+            }
+            DrawText("Para decidir o futuro do mundo, eles propuseram um torneio de Pinball!", screenWidth / 2 - MeasureText("Para decidir o futuro do mundo, eles propuseram um torneio de Pinball!", 20) / 2, screenHeight - 80, 20, WHITE);
+            break;
+        case 2:
+            // Imagem de alguém virando uma bola de pinball (redimensionada para caber na tela)
+            {
+                float scaleX = screenWidth * 0.8f / pinballBall.width;
+                float scaleY = screenHeight * 0.8f / pinballBall.height;
+                float scale = fminf(scaleX, scaleY); // Mantém proporção
+                Vector2 pos = {screenWidth / 2 - (pinballBall.width * scale) / 2, screenHeight / 2 - (pinballBall.height * scale) / 2};
+                DrawTextureEx(pinballBall, pos, 0.0f, scale, WHITE);
+            }
+            DrawText("Você está competindo para ser o Presidente do Mundo!", screenWidth / 2 - MeasureText("Você está competindo para ser o Presidente do Mundo!", 20) / 2, screenHeight - 80, 20, WHITE);
+            break;
+        default:
+            // Fim da cinemática, transita para o jogo
+            strcpy(fase, "fase1");
+            p_walls = p1_walls;
+            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+            p.setPosition(100, 500); // Define a posição inicial do jogador 
+            return PLAYING;
+    }
+
+    if (timer >= frameDuration) {
+        frame++;
+        timer = 0.0f;
+    }
+
+    // Pular cinemática com ENTER
+    if (IsKeyPressed(KEY_ENTER)) {
+        strcpy(fase, "fase1");
+        p_walls = p1_walls;
+        walls.insert(walls.end(), p_walls.begin(), p_walls.end());
+        p.setPosition(100, 500);
+        return PLAYING;
+    }
+    DrawText("Pressione ENTER para pular", screenWidth - 200, screenHeight - 20, 10, WHITE);
+
+
+    EndDrawing();
+    return game_state;
 }
 
 
