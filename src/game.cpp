@@ -79,6 +79,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
             DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
             DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                p.score = 0; // reseta a pontuacao
                 strcpy(fase, "fase1");
                 balls.clear();
                 loadPhase(p1_phase_data, p); // Carrega a fase 1
@@ -214,17 +215,20 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
             DrawText("Play!", screenWidth / 2 - 25 , screenHeight / 2 + 215, 20, RED);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 if(strcmp(fase, "") == 0 || strcmp(fase, "fase1") == 0) {
+                    p.score = 0;
                     strcpy(fase, "fase1");
                     balls.clear();
                     loadPhase(p1_phase_data, p); // Carrega a fase 1
                     balls.push_back(p);
                 } else if (strcmp(fase, "fase2") == 0) {
+                    p.score = 0;
                     balls.clear();
                     loadPhase(p2_phase_data, p); // Carrega a fase 2
                     balls.push_back(p);
                 } else {
                     std::cout << "Fase desconhecida: " << fase << std::endl;
                     strcpy(fase, "fase1");
+                    p.score = 0;
                     balls.clear();
                     loadPhase(p1_phase_data, p);
                     balls.push_back(p);
@@ -327,6 +331,9 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
 Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
+
+    // exibe a pontuacao na pontuao
+    DrawText(TextFormat("Score: %d", p.score), 20, 10, 20, RED);
     
     if (balls.empty()) { // verifica se há bolas
         EndDrawing();
@@ -365,6 +372,15 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
 
                 bumper.onHit(); // Ativa o efeito visual do bumper
                 PlaySound(bumpsound); 
+
+                //pontuacao para cada bumper
+                int BUMPER_SCORE_VALUE = 100;
+                if (ball.characterId == 1) {
+                    p.score += BUMPER_SCORE_VALUE * 2;
+                }
+                else {
+                    p.score += BUMPER_SCORE_VALUE;
+                }
 
                 // Separação para evitar que a bola fique presa
                 ballPos = Add(ballPos, Scale(normal, penetration)); 
