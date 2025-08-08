@@ -1,6 +1,8 @@
 #include "game.h"
 #include "bumper.h"
 #include "utility.h"
+#include <string>
+#include <algorithm>
 
 float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 
@@ -251,12 +253,90 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
 Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Scoreboard Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, WHITE);
     
-    if (IsKeyPressed(KEY_ESCAPE)) {
-        return MENU; // Retorna ao menu
+    DrawText("Scoreboard", screenWidth / 2 - 220, 220, 65, WHITE);
+
+    // Aliens:
+    // - Ivison Rafael
+    // - O real Joao Pinto bola
+    // - Egito T.
+    // - GC
+    // - TT
+    // - Zé Ninguém
+    const char* Alien_names[] = {
+        "Ivison Rafael ",
+        "O real Joao Pinto bola ",
+        "Egito T. ",
+        "GC ",
+        "TT ",
+        "Zé Ninguém ",
+        "Lebron James ",    
+        "",
+    };
+
+
+    // Os aliens só são sorteados ao mudar de fase
+    static std::vector<std::pair<const char*, int>> aliens;
+    static std::string last_fase = "";
+    if (last_fase != std::string(fase)) {
+        aliens.clear();
+        // Embaralha os nomes dos aliens para evitar repetidos
+        std::vector<const char*> names(Alien_names, Alien_names + sizeof(Alien_names)/sizeof(Alien_names[0]));
+        std::random_shuffle(names.begin(), names.end());
+        // Seleciona os 4 primeiros aliens (deixa espaço para o jogador)
+        for (int i = 0; i < 4 && i < (int)names.size(); i++) {
+            int score = GetRandomValue(900, 1100); // Score aleatório próximo de 1000
+            aliens.push_back({names[i], score});
+        }
+        last_fase = std::string(fase);
     }
-    
+    // Garante que o jogador está no scoreboard
+    const char* jogador_nome = "Você";
+    bool jogador_presente = false;
+    for (auto& a : aliens) {
+        if (strcmp(a.first, jogador_nome) == 0) {
+            a.second = p.score;
+            jogador_presente = true;
+            break;
+        }
+    }
+    if (!jogador_presente) {
+        aliens.push_back({jogador_nome, p.score});
+    }
+    // Mantém só 5 no scoreboard
+    while ((int)aliens.size() > 5) {
+        aliens.pop_back();
+    }
+
+   // Mostra a pontuação de todos em ordem decrescente
+   std::sort(aliens.begin(), aliens.end(), [](const auto& a, const auto& b) {
+       return a.second > b.second;
+   });
+   
+   for (size_t i = 0; i < aliens.size(); i++) {
+       const char* name = aliens[i].first;
+       int score = aliens[i].second;
+       Color color;
+       
+       if (i == 0){
+            // passa um tempo como branco depois troca para GOLD
+            
+            timer += GetFrameTime();
+            std::cout << "Timer: " << timer << std::endl;
+            if (timer >= 0.5f && timer < 1.0f) {
+               color = GOLD;
+           }else if (timer < 0.5f) {
+               color = WHITE;
+           }else if (timer >= 1.0f) {
+               color = GOLD;
+               timer = 0.0f;
+           }
+       } else {
+           color = WHITE;
+       }
+        DrawText(TextFormat("%d. %s: %d", i + 1, name, score), screenWidth / 2 - 250, 300 + i * 30, 20, color);
+   }    
+
     EndDrawing();
     
     return game_state; // Retorna o estado do jogo
