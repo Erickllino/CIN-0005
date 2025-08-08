@@ -94,5 +94,5 @@ GamePhase p2_phase_data = {
         Bumper({400, 450}, 25.0f, DARKBLUE)
     },
     // Posição inicial da bola para Fase 2
-    {100, 500}
+    {1150, 600}
 };
