@@ -2,9 +2,9 @@
 
 #include "game.h"
 
-
-float screenWidth = 800.0;
-float screenHeight = 600.0;
+// ajustado o tamanho da janela
+float screenWidth = 1280.0;
+float screenHeight = 800.0;
 
 
 int main() {
@@ -22,11 +22,19 @@ int main() {
   while (!WindowShouldClose()) {
 
     // Open menu
-    
+    std::cout << "Fase: " << fase << std::endl;
     switch (game_state) {
       case Game::MENU:
         game_state = game.menu(game_state, fase, p);
         break;
+      case Game::CINEMATIC: 
+        game_state = game.cinematic_step(game_state, fase, p);
+        break;
+      
+      case Game::CHARACTER_SELECTION:
+        game_state = game.selectCharacter(game_state, fase, p); // ← função nova
+        break;
+
       case Game::PLAYING:
         game_state = game.play_step(game_state, fase, p);
         break;
@@ -36,6 +44,7 @@ int main() {
         break;
       case Game::GAME_OVER:
         // Placeholder for game over logic
+        BeginDrawing();
         DrawText("Game Over! Press ESC to exit.", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, RED);
         if (IsKeyPressed(KEY_ESCAPE)) {
           CloseWindow();
@@ -66,6 +75,7 @@ int main() {
       paused = 10; // Reset pause counter
       game_state = Game::PAUSED; // Change to paused state
     }
+    
   }
 
   UnloadSound(game.ball_collision);

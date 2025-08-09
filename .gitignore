@@ -1,1 +1,4 @@
 extra/
+build/
+main
+*.o

@@ -1,6 +1,6 @@
 Campeonato de pinball
 
-(Ivan / Heiji)
+(Ivan / Heiji / Jes / Tutubas)
 Cinematica para mostrar historia
     - Aliens invadiram a terra e para decidir o futuro do mundo
     - Eles chamaram a humanidade para jogar um Torneio de pinball
@@ -11,13 +11,12 @@ Cinematica para mostrar historia
         - Foto dos Aliens perto de um pinball
         - Alguem virando uma bola de pinball
 
-Faze os png dos mapa
-UI do jogo
+    Imagem dos Personagens
+    Faze os png dos mapa
+    UI do jogo
 
 (Heitor / Heiji)        
 Selecionar Personagens Suporte
-
-
     - Eitor (JoaoPintoBall)
         - Pega ball    
     - Jessica (Jessball)
@@ -40,6 +39,8 @@ Fases
 
 (Jessica) 
 Fazer a logica do Bumper/Fliper
+
+(Tutubas)
 Fazer a logica do lançamento da bola
 
 
