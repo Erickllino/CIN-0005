@@ -492,12 +492,11 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 PlaySound(bumpsound); 
 
                 //pontuacao para cada bumper
-                int BUMPER_SCORE_VALUE = 100;
                 if (ball.characterId == 1) {
-                    p.score += BUMPER_SCORE_VALUE * 2;
+                    p.score += bumper.scoreValue * 2;
                 }
                 else {
-                    p.score += BUMPER_SCORE_VALUE;
+                    p.score += bumper.scoreValue;
                 }
 
                 // Separação para evitar que a bola fique presa
@@ -683,8 +682,8 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         }
 
         // Limita a velocidade
-        vel.x = Clamp(vel.x, -8.0f, 8.0f);
-        vel.y = Clamp(vel.y, -8.0f, 8.0f);
+        vel.x = Clamp(vel.x, -6.0f, 6.0f);
+        vel.y = Clamp(vel.y, -6.0f, 6.0f);
 
         // Aplica a nova posição e velocidade ao objeto
         b.x = pos.x;

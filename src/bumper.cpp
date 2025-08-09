@@ -3,11 +3,12 @@
 
 Sound bumpsound = LoadSound("assets/sounds/bumper.wav"); // Som do bumper
 
-Bumper::Bumper(Vector2 pos, float r, Color c) :
+Bumper::Bumper(Vector2 pos, float r, Color c, int score) :
     position(pos),
     radius(r),
     originalRadius(r),
     color(c),
+    scoreValue(score),
     isHit(false),
     hitTimer(0.0f)
 { }
