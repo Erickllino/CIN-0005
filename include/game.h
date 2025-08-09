@@ -23,7 +23,11 @@ private:
 	float timer;
 	float frameDuration;
 
-    //Music cinematicMusic;
+    bool leBallActive; // Flag para verificar se LeBall está ativo
+    float leBallTimer; // Tempo que LeBall está ativo
+    float leBallCooldown;
+
+    Sound bumperSound; // Som do bumper
 
 public:
     Game(float screenWidth, float screenHeight);
@@ -46,8 +50,8 @@ public:
     std::vector<player> balls;
     Vector2 initialBallPos = {1000, 500};
 
-    Sound ball_collision = LoadSound("assets/sounds/collision.wav");
-    Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
+    Sound ball_collision;
+    //Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
 
     // Variáveis para os flipers
     Vector2 leftFlipperPos;

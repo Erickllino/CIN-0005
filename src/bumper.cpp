@@ -1,7 +1,14 @@
 #include "bumper.h"
 #include "utility.h" 
 
-Sound bumpsound = LoadSound("assets/sounds/bumper.wav"); // Som do bumper
+Bumper::Bumper() : 
+    position({0, 0}),
+    radius(0),
+    originalRadius(0),
+    color(WHITE),
+    isHit(false),
+    hitTimer(0.0f)
+{ }
 
 Bumper::Bumper(Vector2 pos, float r, Color c) :
     position(pos),
@@ -11,6 +18,27 @@ Bumper::Bumper(Vector2 pos, float r, Color c) :
     isHit(false),
     hitTimer(0.0f)
 { }
+
+Bumper::Bumper(const Bumper& other) :
+    position(other.position),
+    radius(other.radius),
+    originalRadius(other.originalRadius),
+    color(other.color),
+    isHit(other.isHit),
+    hitTimer(other.hitTimer)
+{ }
+
+Bumper& Bumper::operator=(const Bumper& other) {
+    if (this != &other) {
+        position = other.position;
+        radius = other.radius;
+        originalRadius = other.originalRadius;
+        color = other.color;
+        isHit = other.isHit;
+        hitTimer = other.hitTimer;
+    }
+    return *this;
+}
 
 void Bumper::draw() {
     DrawCircleV(position, radius, color);
@@ -52,7 +80,6 @@ bool Bumper::checkCollision(const Vector2& ballPos, float ballRadius, Vector2& n
 }
 
 void Bumper::onHit() {
-    PlaySound(bumpsound);
     isHit = true;
     hitTimer = 0.0f;
 }
