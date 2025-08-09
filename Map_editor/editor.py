@@ -7,7 +7,7 @@ FALLBACK_WIDTH  = 1280
 FALLBACK_HEIGHT = 800
 
 # caminho do seu PNG
-IMAGE_PATH = '/mnt/c/Users/samir/Downloads/teste.png'
+IMAGE_PATH = '/mnt/c/Users/samir/Downloads/teste2.png'
 # arquivo de saída
 OUT_PATH   = 'Map_editor/walls.txt'
 

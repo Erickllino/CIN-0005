@@ -1,6 +1,8 @@
 #include "game.h"
 #include "bumper.h"
 #include "utility.h"
+#include <string>
+#include <algorithm>
 
 float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 
@@ -188,13 +190,10 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
     
     int letterCount = strlen(fase); // Tamanho máximo do código
 
-    std::cout  << "Codigo fase: " << fase <<  " Letter count: " << letterCount <<std::endl;
-    
     while (key > 0){
         // NOTE: Only allow keys in range [32..125]
         if ((key >= 32) && (key <= 125) && (letterCount < CODE_SIZE - 1))
         {
-            std::cout << "Key add: " << (char)key << std::endl;
             fase[letterCount] = (char)key;
             fase[letterCount+1] = '\0'; // Add null terminator at the end of the string.
             letterCount++;
@@ -260,12 +259,131 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
 Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Scoreboard Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, WHITE);
     
-    if (IsKeyPressed(KEY_ESCAPE)) {
-        return MENU; // Retorna ao menu
+    DrawText("Scoreboard", screenWidth / 2 - 220, 220, 65, WHITE);
+
+    // Aliens:
+    // - Ivison Rafael
+    // - O real Joao Pinto bola
+    // - Egito T.
+    // - GC
+    // - TT
+    // - Zé Ninguém
+    const char* Alien_names[] = {
+        "Ivison Rafael ",
+        "O real Joao Pinto bola ",
+        "Egito T. ",
+        "GC ",
+        "TT ",
+        "Zé Ninguém ",
+        "Lebron James ",    
+        "Neymar ",
+        "Vasco da Gama",
+        ""
+    };
+
+
+    // Os aliens só são sorteados ao mudar de fase
+    static std::vector<std::pair<const char*, int>> aliens;      // (nome, score)
+    static std::string last_fase = "";                          // Para regenerar ao trocar de fase
+
+    // Trata fase vazia como "fase1" para consistência (evita scoreboard vazio / acesso inválido)
+    if (fase[0] == '\0') {
+        strcpy(fase, "fase1");
     }
-    
+
+    // (Re)gera a lista quando muda a fase ou se por algum motivo ficou vazia
+    if (last_fase != std::string(fase) || aliens.empty()) {
+        aliens.clear();
+        std::vector<const char*> names(Alien_names, Alien_names + sizeof(Alien_names)/sizeof(Alien_names[0]));
+        std::random_shuffle(names.begin(), names.end()); // (Manter por compatibilidade – escopo não inclui refator #8)
+        for (int i = 0; i < 4 && i < (int)names.size(); i++) {
+            int score = GetRandomValue(900, 1100);
+            aliens.push_back({names[i], score});
+        }
+        last_fase = std::string(fase);
+    }
+
+    // Atualiza / insere jogador
+    const char* jogador_nome = "Você";
+    bool jogador_presente = false;
+    for (auto &a : aliens) {
+        if (strcmp(a.first, jogador_nome) == 0) {
+            a.second = p.score; // sincroniza score atual
+            jogador_presente = true;
+            break;
+        }
+    }
+    if (!jogador_presente) {
+        aliens.push_back({jogador_nome, p.score});
+    }
+
+    // Limita para no máximo 5 (mantém o jogador, já garantido acima)
+    while ((int)aliens.size() > 5) {
+        // Se o último for o jogador, troca antes de remover
+        if (strcmp(aliens.back().first, jogador_nome) == 0) {
+            std::swap(aliens.back(), aliens.front()); // move jogador para frente antes de truncar
+        }
+        aliens.pop_back();
+    }
+
+    // Segurança adicional: se mesmo assim estiver vazio (não deve ocorrer), repõe jogador
+    if (aliens.empty()) {
+        aliens.push_back({jogador_nome, p.score});
+    }
+
+   // Mostra a pontuação de todos em ordem decrescente
+   std::sort(aliens.begin(), aliens.end(), [](const auto& a, const auto& b) {
+       return a.second > b.second;
+   });
+   
+   for (size_t i = 0; i < aliens.size(); i++) {
+       const char* name = aliens[i].first;
+       int score = aliens[i].second;
+       Color color;
+       
+       if (i == 0){
+            // passa um tempo como branco depois troca para GOLD
+            
+            timer += GetFrameTime();
+            
+            if (timer >= 0.5f && timer < 1.0f) {
+               color = GOLD;
+           }else if (timer < 0.5f) {
+               color = WHITE;
+           }else if (timer >= 1.0f) {
+               color = GOLD;
+               timer = 0.0f;
+           }
+       } else {
+           color = WHITE;
+       }
+        DrawText(TextFormat("%d. %s: %d", i + 1, name, score), screenWidth / 2 - 250, 300 + i * 30, 20, color);
+   }
+
+   // Aperte enter para continuar
+   DrawText("Pressione ENTER para continuar", screenWidth / 2 - 150, screenHeight - 50, 20, WHITE);
+   if (IsKeyPressed(KEY_ENTER)) {
+       // Proteção contra acesso inválido
+       if (!aliens.empty() && strcmp(aliens[0].first, "Você") == 0) {
+           // Jogador é o primeiro: avança lógica de fase
+           aliens[0].second = p.score; // sincroniza (já está, mas mantém intenção – problema 17)
+           if (strcmp(fase, "fase1") == 0) {
+               strcpy(fase, "fase2");
+               p.score = 0;
+               // Recarrega completamente a fase 2 (problema 4)
+               balls.clear();
+               loadPhase(p2_phase_data, p);
+               balls.push_back(p);
+               return Game::PLAYING;
+           } else if (strcmp(fase, "fase2") == 0) {
+               std::cout << "Ganhou" << std::endl;
+               return Game::GAME_OVER;
+           } else {
+               return Game::GAME_OVER; // Fase desconhecida
+           }
+       }
+   }
     EndDrawing();
     
     return game_state; // Retorna o estado do jogo
@@ -404,12 +522,11 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 PlaySound(bumperSound); // Toca o som do bumper
 
                 //pontuacao para cada bumper
-                int BUMPER_SCORE_VALUE = 100;
                 if (ball.characterId == 1) {
-                    p.score += BUMPER_SCORE_VALUE * 2;
+                    p.score += bumper.scoreValue * 2;
                 }
                 else {
-                    p.score += BUMPER_SCORE_VALUE;
+                    p.score += bumper.scoreValue;
                 }
 
                 // Separação para evitar que a bola fique presa
@@ -631,8 +748,8 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         }
 
         // Limita a velocidade
-        vel.x = Clamp(vel.x, -8.0f, 8.0f);
-        vel.y = Clamp(vel.y, -8.0f, 8.0f);
+        vel.x = Clamp(vel.x, -6.0f, 6.0f);
+        vel.y = Clamp(vel.y, -6.0f, 6.0f);
 
         // Aplica a nova posição e velocidade ao objeto
         b.x = pos.x;
