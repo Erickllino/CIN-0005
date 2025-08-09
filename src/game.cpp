@@ -16,12 +16,20 @@ Game::Game(float width, float height) {
 	alienPinball = LoadTexture("assets/images/alienpinball.png");
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
 
+    bumperSound = LoadSound("assets/sounds/bumper.wav");
+    ball_collision = LoadSound("assets/sounds/collision.wav");
+
 	frame = 0;
 	timer = 0.0f;
 	frameDuration = 5.0f;
 
     //cinematicMusic = LoadMusicStream("assets/sounds/cinematic_music.mp3");
     //SetMusicVolume(cinematicMusic, 0.5f);
+
+    //Inicializa o LeBall
+    leBallActive = false;
+    leBallTimer = 0.0f;
+    leBallCooldown = 0.0f; 
 
     // Paredes externas
     walls = {
@@ -54,7 +62,8 @@ Game::~Game() {
 	UnloadTexture(alienship);
 	UnloadTexture(alienPinball);
 	UnloadTexture(pinballBall);
-    //UnloadMusicStream(cinematicMusic);
+    UnloadSound(bumperSound);
+    UnloadSound(ball_collision);
 }
 
 // Função de menu (placeholder)
@@ -469,6 +478,27 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         DrawLineV(seg.first, seg.second, RED);
     }
 
+    //verifica LeBall
+    float timeleBall = GetFrameTime();
+    if (leBallActive) {
+        leBallTimer -= timeleBall;
+        if (leBallTimer <= 0.0f) 
+        {
+            leBallActive = false; // Desativa LeBall após o tempo acabar
+        }         
+    }
+    if(leBallCooldown > 0.0f) {
+        leBallCooldown -= timeleBall; 
+    }
+
+    if (leBallActive)
+    {
+        Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
+        Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+        DrawLineV(leBallWallStart, leBallWallEnd, PURPLE);
+    }
+    
+
     // --- Colisão com Bumpers ---
     float deltaTime = GetFrameTime(); // Tempo entre frames para animação
     for (Bumper& bumper : bumpers) {
@@ -489,7 +519,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 penetration = minDistance - distance;
 
                 bumper.onHit(); // Ativa o efeito visual do bumper
-                PlaySound(bumpsound); 
+                PlaySound(bumperSound); // Toca o som do bumper
 
                 //pontuacao para cada bumper
                 if (ball.characterId == 1) {
@@ -577,6 +607,27 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls[0].vy -= balls[0].vy * breakForce;
         }
     }
+
+    if (balls[0].characterId == 2)  // LeBall
+    {
+        if (IsKeyPressed(KEY_L) && !leBallActive && leBallCooldown <= 0.0f) 
+        {
+            leBallActive = true;
+            leBallTimer = 10.0f; // Tempo que LeBall fica ativo
+            leBallCooldown = 30.0f; // Tempo de recarga do LeBall
+        }
+        
+        if (leBallActive){
+            DrawText(TextFormat("LeBall!: %.1fs", leBallTimer), 20, 40, 16, YELLOW);            
+        }
+        else if (leBallCooldown > 0.0f) {
+            DrawText(TextFormat("LeBall disponivel em: %.1fs", leBallCooldown), 20, 40, 16, PURPLE);
+        }
+        else {
+            DrawText("Pressione L para ativar LeBall!", 20, 40, 16, YELLOW);
+        }
+    }
+    
     
     // Duet Ball apenas ativado na tecla D para testes
     if (balls[0].characterId == 5 && IsKeyPressed(KEY_D)) {
@@ -604,8 +655,8 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         pos.x += vel.x;
         pos.y += vel.y;
 
-        if (pos.y - r > screenHeight) {
-            game_state = SCOREBOARD; // Se cair no buraco, game over
+        if(!leBallActive && pos.y - r > screenHeight) {
+            game_state = SCOREBOARD; 
         }
         
         // Verifica colisão com paredes fixas
@@ -617,6 +668,21 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 vel = Sub(vel, Scale(normal, 2 * dot));
                 pos = Add(cp, Scale(normal, r));
                 break;
+            }
+        }
+
+        // Colisão com a parede temporária do LeBall (se ativa)
+        if (leBallActive) {
+            Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
+            Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+            Vector2 cp, normal;
+            if (CheckCollisionCircleLine(pos, r, leBallWallStart, leBallWallEnd, cp, normal)) {
+                PlaySound(ball_collision);
+                float dot = Dot(vel, normal);
+                vel = Sub(vel, Scale(normal, 2 * dot));
+                pos = Add(cp, Scale(normal, r));
+                // Impulso extra para cima quando bate na parede LeBall
+                vel.y -= 2.0f;
             }
         }
 

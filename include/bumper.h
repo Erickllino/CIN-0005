@@ -13,7 +13,11 @@ public:
     float hitTimer; // Tempo para o efeito de pulsação
     int scoreValue; // pontuacao do bumper
 
-    Bumper(Vector2 pos, float r, Color c, int score);
+    Bumper(const Bumper& other); //constructor de cópia
+    Bumper& operator=(const Bumper& other); // operador de atribuição
+    Bumper();
+    Bumper(Vector2 pos, float r, Color c);
+
     void draw();
     void update(float dt); // dt = delta time para animação
     bool checkCollision(const Vector2& ballPos, float ballRadius, Vector2& normal, float& penetration);

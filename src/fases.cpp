@@ -98,7 +98,7 @@ vector<pair<Vector2, Vector2>> p2_walls = {
 
 // Definição da Fase 1
 GamePhase p1_phase_data = {
-    // Paredes da Fase 1 (usando os dados que você já tinha)
+
     {p1_walls},
     // Bumpers da Fase 1 (adicionados aqui)
     {
@@ -112,9 +112,9 @@ GamePhase p1_phase_data = {
 
 // Definição da Fase 2
 GamePhase p2_phase_data = {
-    // Paredes da Fase 2 (usando os dados que você já tinha)
+
     {p2_walls},
-    // Bumpers da Fase 2 (adicionados aqui)
+
     {
         Bumper({931, 382}, 30.0f, RED, 100),
         Bumper({990, 277}, 20.0f, PURPLE, 10),
