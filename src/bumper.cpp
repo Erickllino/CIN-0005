@@ -6,6 +6,7 @@ Bumper::Bumper() :
     radius(0),
     originalRadius(0),
     color(WHITE),
+    scoreValue(0),
     isHit(false),
     hitTimer(0.0f)
 { }
@@ -25,6 +26,7 @@ Bumper::Bumper(const Bumper& other) :
     radius(other.radius),
     originalRadius(other.originalRadius),
     color(other.color),
+    scoreValue(other.scoreValue),
     isHit(other.isHit),
     hitTimer(other.hitTimer)
 { }
