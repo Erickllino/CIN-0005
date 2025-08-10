@@ -31,6 +31,8 @@ public:
     
     float screenWidth = 800;
     float screenHeight = 600;
+    float playTimer;
+    float buttonPressTime;
 
     enum GameState {
         MENU,
