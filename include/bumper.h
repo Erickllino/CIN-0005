@@ -16,7 +16,6 @@ public:
     Bumper(const Bumper& other); //constructor de cópia
     Bumper& operator=(const Bumper& other); // operador de atribuição
     Bumper();
-    
     Bumper(Vector2 pos, float r, Color c, int score);
 
     void draw();
