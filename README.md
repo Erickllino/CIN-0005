@@ -111,7 +111,7 @@ O jogo possui flipers controlados por Q/E, com física realista, força extra ao
 ## 👨‍💻 Autores
 
 - Ivan, Heiji, Jessica, Tutubas, Heitor, Samira, Erick
-- Contribuições: Cinemática, lógica dos bumpers/flipers, mapas, leaderboard, personagens
+- Contribuições: Cinemática, lógica dos bumpers/flipers, pontos, mapas, leaderboard, personagens
 
 
 
