@@ -140,21 +140,21 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
     const int numCharacters = 6;
 
     const char* characterNames[] = {
-        "Eitor (JoaoPintoBall)",
-        "Jessica (Jessball)",
-        "Heiji (LeBall)",
-        "Erick",
-        "Samira",
-        "Ivan"
+        "JPBall",
+        "Jessball",
+        "LeBall",
+        "E-Ball",
+        "SamiBall",
+        "Iv-Ball"
     };
 
     const char* characterPowers[] = {
-        "- Controla Ball: controla a bola levemente",
+        "- Cntrl Ball: controla bola levemente",
         "- Score Ball: pontuação 2x",
-        "- Trava Ball: protege para a bola não cair",
-        "- Slash Ball: causa dano ao redor", // mudou para red. da gravidade
-        "- Vamp Ball: recupera vida com impacto", // mudou para bola gigante
-        "- Duet Ball: invoca outras bolas (máx 4)"
+        "- Stop Ball: nao deixa bola cair",
+        "- Grav Ball: reduz a gravidade",
+        "- Tera Ball: bola aumentada",
+        "- Duet Ball: invoca ate 4 bolas"
     };
 
     BeginDrawing();
@@ -169,7 +169,7 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
 
         DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : DARKGRAY);
         DrawText(characterNames[i], btn.x + 10, btn.y + 10, 20, RED);
-        DrawText(characterPowers[i], btn.x + 220, btn.y + 10, 16, WHITE);
+        DrawText(characterPowers[i], btn.x + 110, btn.y + 10, 16, WHITE);
 
         if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             selectedCharacter = i;
@@ -476,6 +476,14 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     BeginDrawing();
     ClearBackground(BLACK);
 
+    Music music;
+    music = LoadMusicStream("assets/sounds/spacejam.mp3");
+
+    PlayMusicStream(music);
+    SetMusicVolume(music, 0.5f);
+
+    UpdateMusicStream(music);
+
     // Bloco contagem de tempo
     playTimer += GetFrameTime();
     int totalSeconds = (int)playTimer;
@@ -724,12 +732,6 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     
     // Poder de redução da gravidade
     if (balls[0].characterId == 3) {
-        // movimentacao para testes
-        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
-        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
-        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
-        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
-        // implentacao do ppoder reducao da gravidade
         if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
             buttonPressTime = playTimer;
         }
@@ -747,12 +749,6 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
 
     //Poder de aumentar a bola
     if (balls[0].characterId == 4) {
-        // movimentacao para testes
-        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
-        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
-        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
-        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
-        // implentacao do poder bola gigante
         if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
             buttonPressTime = playTimer;
         }
