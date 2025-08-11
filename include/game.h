@@ -46,6 +46,7 @@ public:
 		CINEMATIC,
         SCOREBOARD,
         PAUSED,
+        YOU_WIN,
         GAME_OVER,
         CONTINUE_MENU
     };
@@ -93,6 +94,8 @@ public:
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState win_screen(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState game_over_screen(GameState game_state, char fase[CODE_SIZE], player &p);
 	GameState cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p);
     void loadPhase(const GamePhase& phase, player& p);
     GameState selectCharacter(GameState game_state, char fase[CODE_SIZE], player &p);
