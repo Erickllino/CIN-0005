@@ -47,7 +47,7 @@ int main() {
                 linhas.push_back(novaLinha);
 
                 //imprime as coordenadas dos pontos
-                std::cout <<"{{"<< pontoInicial.x<<","<< pontoInicial.y <<"}}"<<","<<"{{"<<pontoFinal.x<<","<<pontoFinal.y<<"}}"<< std::endl;
+                std::cout <<"{{"<< pontoInicial.x<<","<< pontoInicial.y <<"}"<<","<<"{"<<pontoFinal.x<<","<<pontoFinal.y<<"}}"<< std::endl;
             }
 
         }
