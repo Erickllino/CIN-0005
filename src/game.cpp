@@ -37,8 +37,8 @@ Game::Game(float width, float height) {
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo
-        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
+        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo esquerdo
+        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo direito
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
@@ -50,6 +50,21 @@ Game::Game(float width, float height) {
     rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
     leftFlipperPressed = false;
     rightFlipperPressed = false;
+
+    // Inicializa variáveis do lançador (plunger)
+    launcherAreaWidth = 80.0f;
+    launcherAreaPos = {1125.0f, 350.0f};  // Movido mais para a esquerda
+    plungerWidth = 70.0f;  // Aumentado o tamanho
+    plungerHeight = 20.0f;  // Aumentado o tamanho
+    plungerPos = {1140.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
+    plungerMaxPower = 800.0f;  // Força máxima do lançador
+    plungerCurrentPower = 0.0f;
+    plungerCharging = false;
+    ballInLauncher = false;
+
+    // Inicializa variáveis de controle de tempo após lançamento
+    timeSinceLaunch = 0.0f;
+    ballWasLaunched = false;
 
 }
 
@@ -602,7 +617,64 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     DrawCircleV(leftFlipperPos, 10.0f, GRAY);   // Ponto de rotação
     DrawCircleV(rightFlipperPos, 10.0f, GRAY);  // Ponto de rotação
 
+    // --- Lógica do Lançador (Plunger) ---
+    // Verifica se a bola está na área do lançador (usando as variáveis do construtor)
+    ballInLauncher = false;
+    for (auto& ball : balls) {
+        if (ball.x >= (launcherAreaPos.x - 20.0f) && ball.x <= (launcherAreaPos.x + launcherAreaWidth + 20.0f) && 
+            ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
+            ballInLauncher = true;
+            break;
+        }
+    }
 
+    // Input do lançador (tecla SPACE)
+    if (ballInLauncher && IsKeyDown(KEY_SPACE)) {
+        plungerCharging = true;
+        plungerCurrentPower += GetFrameTime() * 500.0f; // Carrega a força
+        if (plungerCurrentPower > plungerMaxPower) {
+            plungerCurrentPower = plungerMaxPower;
+        }
+    } else if (plungerCharging && IsKeyReleased(KEY_SPACE)) {
+        // Lança a bola quando solta o SPACE
+        if (ballInLauncher) {
+            for (auto& ball : balls) {
+                if (ball.x >= (launcherAreaPos.x - 20.0f) && ball.x <= (launcherAreaPos.x + launcherAreaWidth + 20.0f) && 
+                    ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
+                    // Aplica força para cima baseada na força carregada
+                    float forceMultiplier = plungerCurrentPower / plungerMaxPower;
+                    ball.vy = -forceMultiplier * 100.0f; // Força aumentada para o lançador (negativo = para cima)
+                    ball.vx += (rand() % 3 - 1) * 0.5f; // Pequena variação horizontal aleatória
+                    PlaySound(ball_collision); // Som do lançamento
+                    
+                    // Inicia contagem de tempo após lançamento
+                    ballWasLaunched = true;
+                    timeSinceLaunch = 0.0f;
+                    break;
+                }
+            }
+        }
+        plungerCharging = false;
+        plungerCurrentPower = 0.0f;
+    }
+    
+    // Desenha o lançador (plunger) - usando as variáveis do construtor
+    Color plungerColor = plungerCharging ? RED : GRAY;
+    float plungerOffset = plungerCharging ? (plungerCurrentPower / plungerMaxPower) * 25.0f : 0.0f;
+    DrawRectangle(plungerPos.x, plungerPos.y + plungerOffset, plungerWidth, plungerHeight, plungerColor);
+    
+    // Desenha barra de força do lançador (usando as variáveis do construtor)
+    if (ballInLauncher) {
+        DrawText("SPACE para lançar", launcherAreaPos.x - 150, launcherAreaPos.y - 30, 14, WHITE);
+        if (plungerCharging) {
+            float barWidth = 100.0f;
+            float barHeight = 10.0f;
+            float powerPercent = plungerCurrentPower / plungerMaxPower;
+            DrawRectangle(launcherAreaPos.x - 20, launcherAreaPos.y - 15, barWidth, barHeight, DARKGRAY);
+            DrawRectangle(launcherAreaPos.x - 20, launcherAreaPos.y - 15, barWidth * powerPercent, barHeight, 
+                         powerPercent < 0.7f ? GREEN : (powerPercent < 0.9f ? YELLOW : RED));
+        }
+    }
     
     // Começando a colocar os poderes aqui, já que a bola era controlada aqui
     if (balls[0].characterId == 0) {
@@ -706,8 +778,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         float r = b.radius;
 
         // Adiciona gravidade primeiro
-        //vel.y += 0.1f; // Simula gravidade
-
+        if (!ballInLauncher) vel.y += 0.1f; 
         // Aplica movimento
         pos.x += vel.x;
         pos.y += vel.y;
@@ -804,9 +875,24 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             vel.y *= -1;
         }
 
-        // Limita a velocidade
-        vel.x = Clamp(vel.x, -6.0f, 6.0f);
-        vel.y = Clamp(vel.y, -6.0f, 6.0f);
+        // Atualiza o tempo desde o lançamento
+        if (ballWasLaunched) {
+            timeSinceLaunch += GetFrameTime();
+            if (timeSinceLaunch >= 1.0f) {  // 1 segundo depois do lançamento
+                ballWasLaunched = false;  // Desativa o modo de velocidade alta
+            }
+        }
+
+        // Limita a velocidade baseado no tempo desde o lançamento
+        if (ballWasLaunched && timeSinceLaunch < 1.0f) {
+            // Primeiro segundo após lançamento: permite velocidade maior
+            vel.x = Clamp(vel.x, -12.0f, 12.0f);
+            vel.y = Clamp(vel.y, -30.0f, 12.0f);
+        } else {
+            // Velocidade normal após 1 segundo
+            vel.x = Clamp(vel.x, -6.0f, 6.0f);
+            vel.y = Clamp(vel.y, -6.0f, 6.0f);
+        }
 
         // Aplica a nova posição e velocidade ao objeto
         b.x = pos.x;

@@ -106,8 +106,8 @@ GamePhase p1_phase_data = {
         Bumper({980, 700}, 30.0f, GREEN, 10),    // Exemplo de bumper 2
         Bumper({650, 350}, 50.0f, YELLOW, 500)    // Exemplo de bumper 3
     },
-    // Posição inicial da bola para Fase 1
-    {1150, 600}
+    // Posição inicial da bola para Fase 1 (ajustada para nova posição do lançador)
+    {1150, 650}
 };
 
 // Definição da Fase 2
@@ -121,6 +121,6 @@ GamePhase p2_phase_data = {
         Bumper({553, 396}, 20.0f, ORANGE, 500),
         Bumper({1000, 602}, 25.0f, DARKBLUE, 300)
     },
-    // Posição inicial da bola para Fase 2
-    {1150, 600}
+    // Posição inicial da bola para Fase 2 (ajustada para nova posição do lançador)
+    {1150, 650}
 };
