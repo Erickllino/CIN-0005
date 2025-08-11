@@ -30,6 +30,8 @@ private:
     float leBallCooldown;
 
     Sound bumperSound; // Som do bumper
+    Music gameMusic; // Música do jogo
+    bool musicLoaded; // Flag para verificar se a música foi carregada
 
 public:
     Game(float screenWidth, float screenHeight);
@@ -45,6 +47,7 @@ public:
 		CINEMATIC,
         SCOREBOARD,
         PAUSED,
+        YOU_WIN,
         GAME_OVER,
         CONTINUE_MENU
     };
@@ -79,6 +82,10 @@ public:
     float timeSinceLaunch;
     bool ballWasLaunched;
 
+    // Variáveis para controle de tempo e habilidades especiais
+    float playTimer;
+    float buttonPressTime;
+
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
     GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
@@ -88,6 +95,8 @@ public:
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState win_screen(GameState game_state, char fase[CODE_SIZE], player &p);
+    GameState game_over_screen(GameState game_state, char fase[CODE_SIZE], player &p);
 	GameState cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p);
     void loadPhase(const GamePhase& phase, player& p);
     GameState selectCharacter(GameState game_state, char fase[CODE_SIZE], player &p);

@@ -9,6 +9,7 @@
     "cmake.sourceDirectory": "/home/yienvee/Desktop/Faculdade/CIN-0005/external/raylib",
     "files.associations": {
         "cfloat": "cpp",
+
         "__bit_reference": "cpp",
         "__hash_table": "cpp",
         "__locale": "cpp",
@@ -55,5 +56,6 @@
         "complex": "cpp",
         "sstream": "cpp",
         "algorithm": "cpp"
+
     }
 }

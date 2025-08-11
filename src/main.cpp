@@ -44,12 +44,10 @@ int main() {
         break;
       case Game::GAME_OVER:
         // Placeholder for game over logic
-        BeginDrawing();
-        DrawText("Game Over! Press ESC to exit.", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, RED);
-        if (IsKeyPressed(KEY_ESCAPE)) {
-          CloseWindow();
-          return 0; // Exit the game
-        }
+        game_state = game.game_over_screen(game_state, fase, p);
+        break;
+      case Game::YOU_WIN:
+        game_state = game.win_screen(game_state, fase, p);
         break;
       case Game::CONTINUE_MENU:
         // TODO: Implement continue menu logic

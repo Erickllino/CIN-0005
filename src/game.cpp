@@ -20,6 +20,10 @@ Game::Game(float width, float height) {
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
 
+    // Carrega a música do jogo apenas uma vez (com verificação robusta)
+    gameMusic = LoadMusicStream("assets/sounds/spacejam.mp3");
+    musicLoaded = false; // Flag para controlar quando iniciar a música
+
 	frame = 0;
 	timer = 0.0f;
 	frameDuration = 5.0f;
@@ -56,7 +60,7 @@ Game::Game(float width, float height) {
     plungerWidth = 70.0f;  // Aumentado o tamanho
     plungerHeight = 20.0f;  // Aumentado o tamanho
     plungerPos = {1140.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
-    plungerMaxPower = 800.0f;  // Força máxima do lançador
+    plungerMaxPower = 100.0f;  // Força máxima do lançador
     plungerCurrentPower = 0.0f;
     plungerCharging = false;
     ballInLauncher = false;
@@ -64,6 +68,10 @@ Game::Game(float width, float height) {
     // Inicializa variáveis de controle de tempo após lançamento
     timeSinceLaunch = 0.0f;
     ballWasLaunched = false;
+
+    // Inicializa variáveis de tempo e habilidades especiais
+    playTimer = 0.0f;
+    buttonPressTime = -1.0f; // -1 indica que não há habilidade ativa
 
 }
 
@@ -82,6 +90,9 @@ Game::~Game() {
     UnloadTexture(select_fundo);
     UnloadSound(bumperSound);
     UnloadSound(ball_collision);
+    
+    // Descarrega a música sem parar explicitamente (o Raylib cuida disso)
+    UnloadMusicStream(gameMusic);
 }
 
 // Função de menu (placeholder)
@@ -181,21 +192,22 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
     const int numCharacters = 6;
 
     const char* characterNames[] = {
-        "Eitor (JoaoPintoBall)",
-        "Jessica (Jessball)",
-        "Heiji (LeBall)",
-        "Erick",
-        "Samira",
-        "Ivan"
+        "JPBall",
+        "Jessball",
+        "LeBall",
+        "E-Ball",
+        "SamiBall",
+        "Iv-Ball"
     };
 
     const char* characterPowers[] = {
-        "- Controla Ball: controla a bola levemente",
+        "- Cntrl Ball: controla bola levemente",
         "- Score Ball: pontuação 2x",
-        "- Trava Ball: protege para a bola não cair",
-        "- Slash Ball: causa dano ao redor",
-        "- Vamp Ball: recupera vida com impacto",
-        "- Duet Ball: invoca outras bolas (máx 4)"
+        "- Stop Ball: nao deixa bola cair",
+        "- Grav Ball: reduz a gravidade",
+        "- Tera Ball: bola aumentada",
+        "- Duet Ball: invoca ate 4 bolas"
+
     };
 
     BeginDrawing();
@@ -216,12 +228,14 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
         Rectangle btn = { screenWidth / 2 - 200, 250.0f + i * 70.0f, 400, 50 };
         bool hovered = CheckCollisionPointRec(mousePos, btn);
 
+
         Color verdeagua = {43, 253, 175, 255};
         Color vermelhobbd = {252, 16, 87, 255};
         Color roxolegal = {171, 25, 111, 255};
         DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : verdeagua);
         DrawText(characterNames[i], btn.x + 10, btn.y + 15, 20, vermelhobbd);
         DrawText(characterPowers[i], btn.x + 80, btn.y + 33, 16, roxolegal);
+
 
         if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             selectedCharacter = i;
@@ -348,7 +362,7 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
         "Lebron James ",    
         "Neymar ",
         "Vasco da Gama",
-        ""
+        "O Monitor"
     };
 
 
@@ -447,15 +461,45 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
                return Game::PLAYING;
            } else if (strcmp(fase, "fase2") == 0) {
                std::cout << "Ganhou" << std::endl;
-               return Game::GAME_OVER;
-           } else {
-               return Game::GAME_OVER; // Fase desconhecida
-           }
-       }
+               return Game::YOU_WIN;
+           } 
+       }else {
+            return Game::GAME_OVER; // Fase desconhecida
+        }
    }
     EndDrawing();
     
     return game_state; // Retorna o estado do jogo
+}
+
+Game::GameState Game::win_screen(GameState game_state, char fase[CODE_SIZE], player &p) {
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Você venceu!", screenWidth / 2 - MeasureText("Você venceu!", 40) / 2, screenHeight / 2 - 20, 40, GREEN);
+    DrawText("Pressione ENTER para continuar", screenWidth / 2 - MeasureText("Pressione ENTER para continuar", 20) / 2, screenHeight / 2 + 30, 20, WHITE);
+    EndDrawing();
+
+    if (IsKeyPressed(KEY_ENTER)) {
+        return Game::MENU;
+    }
+
+    return game_state;
+}
+
+Game::GameState Game::game_over_screen(GameState game_state, char fase[CODE_SIZE], player &p) {
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Game Over", screenWidth / 2 - MeasureText("Game Over", 40) / 2, screenHeight / 2 - 20, 40, RED);
+    DrawText("Pressione ENTER para continuar", screenWidth / 2 - MeasureText("Pressione ENTER para continuar", 20) / 2, screenHeight / 2 + 30, 20, WHITE);
+    EndDrawing();
+
+    if (IsKeyPressed(KEY_ENTER)) {
+        return Game::MENU;
+    }
+
+    return game_state;
 }
 
 Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p) {
@@ -527,6 +571,23 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
 Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
+
+    // Inicializa a música apenas uma vez quando entra no jogo
+    if (!musicLoaded) {
+        PlayMusicStream(gameMusic);
+        SetMusicVolume(gameMusic, 0.5f);
+        musicLoaded = true;
+    }
+
+    // Atualiza a música apenas uma vez por frame
+    UpdateMusicStream(gameMusic);
+
+    // Bloco contagem de tempo
+    playTimer += GetFrameTime();
+    int totalSeconds = (int)playTimer;
+    int minutes = totalSeconds / 60;
+    int seconds = totalSeconds % 60;
+    DrawText(TextFormat("Tempo: %02d:%02d", minutes, seconds), 10, screenHeight-30, 20, WHITE);
 
     // exibe a pontuacao na pontuao
     DrawText(TextFormat("Score: %d", p.score), 20, 10, 20, RED);
@@ -688,7 +749,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                     ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
                     // Aplica força para cima baseada na força carregada
                     float forceMultiplier = plungerCurrentPower / plungerMaxPower;
-                    ball.vy = -forceMultiplier * 100.0f; // Força aumentada para o lançador (negativo = para cima)
+                    ball.vy = -forceMultiplier * 25.0f; // Força aumentada para o lançador (negativo = para cima)
                     ball.vx += (rand() % 3 - 1) * 0.5f; // Pequena variação horizontal aleatória
                     PlaySound(ball_collision); // Som do lançamento
                     
@@ -766,7 +827,44 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls.push_back(newBall);
         }
     }
-   
+
+    
+    // Poder de redução da gravidade
+    if (balls[0].characterId == 3) {
+        if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
+            buttonPressTime = playTimer;
+        }
+        if (buttonPressTime >= 0.0f){
+            float elapsed = playTimer - buttonPressTime;
+            if (elapsed <= 30.0f){
+                balls[0].acelerate_y(-0.05f);
+                DrawText(TextFormat("BOOST ATIVO: %.1f segs restantes", 30.0f - elapsed), 10, 70, 20, GREEN);
+            }
+            else{
+                buttonPressTime = -1.0f;
+            }
+        }
+    }
+
+    //Poder de aumentar a bola
+    if (balls[0].characterId == 4) {
+        if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
+            buttonPressTime = playTimer;
+        }
+        if (buttonPressTime >= 0.0f){
+            float elapsed = playTimer - buttonPressTime;
+            if (elapsed <= 30.0f){
+                balls[0].radius = 25;
+                DrawText(TextFormat("BOOST ATIVO: %.1f segs restantes", 30.0f - elapsed), 10, 70, 20, GREEN);
+            }
+            else{
+                buttonPressTime = -1.0f;
+                balls[0].radius = 10;
+            }
+        }
+    }
+
+
 
     // Atualiza posição e verifica colisao com paredes
     for (auto& b : balls) {
