@@ -78,6 +78,10 @@ public:
     float timeSinceLaunch;
     bool ballWasLaunched;
 
+    // Variáveis para controle de tempo e habilidades especiais
+    float playTimer;
+    float buttonPressTime;
+
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
     GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);

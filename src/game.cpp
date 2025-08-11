@@ -64,6 +64,10 @@ Game::Game(float width, float height) {
     timeSinceLaunch = 0.0f;
     ballWasLaunched = false;
 
+    // Inicializa variáveis de tempo e habilidades especiais
+    playTimer = 0.0f;
+    buttonPressTime = -1.0f; // -1 indica que não há habilidade ativa
+
 }
 
 void Game::loadPhase(const GamePhase& phase, player& p) {
