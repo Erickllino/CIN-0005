@@ -8,6 +8,7 @@
     ],
     "cmake.sourceDirectory": "/home/yienvee/Desktop/Faculdade/CIN-0005/external/raylib",
     "files.associations": {
-        "cfloat": "cpp"
+        "cfloat": "cpp",
+        "vector": "cpp"
     }
 }
