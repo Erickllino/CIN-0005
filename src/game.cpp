@@ -1,6 +1,8 @@
 #include "game.h"
 #include "bumper.h"
 #include "utility.h"
+#include <string>
+#include <algorithm>
 
 float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 
@@ -8,11 +10,16 @@ float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 Game::Game(float width, float height) {
     screenWidth = width;
     screenHeight = height;
+    playTimer = 0.0f;
+    buttonPressTime = -1.0f;
 
 	//carrega textura
 	alienship = LoadTexture("assets/images/alienship.png");
 	alienPinball = LoadTexture("assets/images/alienpinball.png");
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
+
+    bumperSound = LoadSound("assets/sounds/bumper.wav");
+    ball_collision = LoadSound("assets/sounds/collision.wav");
 
 	frame = 0;
 	timer = 0.0f;
@@ -21,12 +28,17 @@ Game::Game(float width, float height) {
     //cinematicMusic = LoadMusicStream("assets/sounds/cinematic_music.mp3");
     //SetMusicVolume(cinematicMusic, 0.5f);
 
+    //Inicializa o LeBall
+    leBallActive = false;
+    leBallTimer = 0.0f;
+    leBallCooldown = 0.0f; 
+
     // Paredes externas
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo
-        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
+        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo esquerdo
+        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo direito
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
@@ -38,6 +50,21 @@ Game::Game(float width, float height) {
     rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
     leftFlipperPressed = false;
     rightFlipperPressed = false;
+
+    // Inicializa variáveis do lançador (plunger)
+    launcherAreaWidth = 80.0f;
+    launcherAreaPos = {1125.0f, 350.0f};  // Movido mais para a esquerda
+    plungerWidth = 70.0f;  // Aumentado o tamanho
+    plungerHeight = 20.0f;  // Aumentado o tamanho
+    plungerPos = {1140.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
+    plungerMaxPower = 800.0f;  // Força máxima do lançador
+    plungerCurrentPower = 0.0f;
+    plungerCharging = false;
+    ballInLauncher = false;
+
+    // Inicializa variáveis de controle de tempo após lançamento
+    timeSinceLaunch = 0.0f;
+    ballWasLaunched = false;
 
 }
 
@@ -52,7 +79,8 @@ Game::~Game() {
 	UnloadTexture(alienship);
 	UnloadTexture(alienPinball);
 	UnloadTexture(pinballBall);
-    //UnloadMusicStream(cinematicMusic);
+    UnloadSound(bumperSound);
+    UnloadSound(ball_collision);
 }
 
 // Função de menu (placeholder)
@@ -79,11 +107,12 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
             DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
             DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                p.score = 0; // reseta a pontuacao
                 strcpy(fase, "fase1");
                 balls.clear();
                 loadPhase(p1_phase_data, p); // Carrega a fase 1
                 balls.push_back(p);
-                return CHARACTER_SELECTION; // Muda para o estado de seleção de personagem
+                return CINEMATIC; // Muda para o estado cinematográfico
             }
         
     }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
@@ -123,8 +152,8 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
         "- Controla Ball: controla a bola levemente",
         "- Score Ball: pontuação 2x",
         "- Trava Ball: protege para a bola não cair",
-        "- Slash Ball: causa dano ao redor",
-        "- Vamp Ball: recupera vida com impacto",
+        "- Slash Ball: causa dano ao redor", // mudou para red. da gravidade
+        "- Vamp Ball: recupera vida com impacto", // mudou para bola gigante
         "- Duet Ball: invoca outras bolas (máx 4)"
     };
 
@@ -178,13 +207,10 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
     
     int letterCount = strlen(fase); // Tamanho máximo do código
 
-    std::cout  << "Codigo fase: " << fase <<  " Letter count: " << letterCount <<std::endl;
-    
     while (key > 0){
         // NOTE: Only allow keys in range [32..125]
         if ((key >= 32) && (key <= 125) && (letterCount < CODE_SIZE - 1))
         {
-            std::cout << "Key add: " << (char)key << std::endl;
             fase[letterCount] = (char)key;
             fase[letterCount+1] = '\0'; // Add null terminator at the end of the string.
             letterCount++;
@@ -214,17 +240,20 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
             DrawText("Play!", screenWidth / 2 - 25 , screenHeight / 2 + 215, 20, RED);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 if(strcmp(fase, "") == 0 || strcmp(fase, "fase1") == 0) {
+                    p.score = 0;
                     strcpy(fase, "fase1");
                     balls.clear();
                     loadPhase(p1_phase_data, p); // Carrega a fase 1
                     balls.push_back(p);
                 } else if (strcmp(fase, "fase2") == 0) {
+                    p.score = 0;
                     balls.clear();
                     loadPhase(p2_phase_data, p); // Carrega a fase 2
                     balls.push_back(p);
                 } else {
                     std::cout << "Fase desconhecida: " << fase << std::endl;
                     strcpy(fase, "fase1");
+                    p.score = 0;
                     balls.clear();
                     loadPhase(p1_phase_data, p);
                     balls.push_back(p);
@@ -247,12 +276,131 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
 Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Scoreboard Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, WHITE);
     
-    if (IsKeyPressed(KEY_ESCAPE)) {
-        return MENU; // Retorna ao menu
+    DrawText("Scoreboard", screenWidth / 2 - 220, 220, 65, WHITE);
+
+    // Aliens:
+    // - Ivison Rafael
+    // - O real Joao Pinto bola
+    // - Egito T.
+    // - GC
+    // - TT
+    // - Zé Ninguém
+    const char* Alien_names[] = {
+        "Ivison Rafael ",
+        "O real Joao Pinto bola ",
+        "Egito T. ",
+        "GC ",
+        "TT ",
+        "Zé Ninguém ",
+        "Lebron James ",    
+        "Neymar ",
+        "Vasco da Gama",
+        ""
+    };
+
+
+    // Os aliens só são sorteados ao mudar de fase
+    static std::vector<std::pair<const char*, int>> aliens;      // (nome, score)
+    static std::string last_fase = "";                          // Para regenerar ao trocar de fase
+
+    // Trata fase vazia como "fase1" para consistência (evita scoreboard vazio / acesso inválido)
+    if (fase[0] == '\0') {
+        strcpy(fase, "fase1");
     }
-    
+
+    // (Re)gera a lista quando muda a fase ou se por algum motivo ficou vazia
+    if (last_fase != std::string(fase) || aliens.empty()) {
+        aliens.clear();
+        std::vector<const char*> names(Alien_names, Alien_names + sizeof(Alien_names)/sizeof(Alien_names[0]));
+        std::random_shuffle(names.begin(), names.end()); // (Manter por compatibilidade – escopo não inclui refator #8)
+        for (int i = 0; i < 4 && i < (int)names.size(); i++) {
+            int score = GetRandomValue(900, 1100);
+            aliens.push_back({names[i], score});
+        }
+        last_fase = std::string(fase);
+    }
+
+    // Atualiza / insere jogador
+    const char* jogador_nome = "Você";
+    bool jogador_presente = false;
+    for (auto &a : aliens) {
+        if (strcmp(a.first, jogador_nome) == 0) {
+            a.second = p.score; // sincroniza score atual
+            jogador_presente = true;
+            break;
+        }
+    }
+    if (!jogador_presente) {
+        aliens.push_back({jogador_nome, p.score});
+    }
+
+    // Limita para no máximo 5 (mantém o jogador, já garantido acima)
+    while ((int)aliens.size() > 5) {
+        // Se o último for o jogador, troca antes de remover
+        if (strcmp(aliens.back().first, jogador_nome) == 0) {
+            std::swap(aliens.back(), aliens.front()); // move jogador para frente antes de truncar
+        }
+        aliens.pop_back();
+    }
+
+    // Segurança adicional: se mesmo assim estiver vazio (não deve ocorrer), repõe jogador
+    if (aliens.empty()) {
+        aliens.push_back({jogador_nome, p.score});
+    }
+
+   // Mostra a pontuação de todos em ordem decrescente
+   std::sort(aliens.begin(), aliens.end(), [](const auto& a, const auto& b) {
+       return a.second > b.second;
+   });
+   
+   for (size_t i = 0; i < aliens.size(); i++) {
+       const char* name = aliens[i].first;
+       int score = aliens[i].second;
+       Color color;
+       
+       if (i == 0){
+            // passa um tempo como branco depois troca para GOLD
+            
+            timer += GetFrameTime();
+            
+            if (timer >= 0.5f && timer < 1.0f) {
+               color = GOLD;
+           }else if (timer < 0.5f) {
+               color = WHITE;
+           }else if (timer >= 1.0f) {
+               color = GOLD;
+               timer = 0.0f;
+           }
+       } else {
+           color = WHITE;
+       }
+        DrawText(TextFormat("%d. %s: %d", i + 1, name, score), screenWidth / 2 - 250, 300 + i * 30, 20, color);
+   }
+
+   // Aperte enter para continuar
+   DrawText("Pressione ENTER para continuar", screenWidth / 2 - 150, screenHeight - 50, 20, WHITE);
+   if (IsKeyPressed(KEY_ENTER)) {
+       // Proteção contra acesso inválido
+       if (!aliens.empty() && strcmp(aliens[0].first, "Você") == 0) {
+           // Jogador é o primeiro: avança lógica de fase
+           aliens[0].second = p.score; // sincroniza (já está, mas mantém intenção – problema 17)
+           if (strcmp(fase, "fase1") == 0) {
+               strcpy(fase, "fase2");
+               p.score = 0;
+               // Recarrega completamente a fase 2 (problema 4)
+               balls.clear();
+               loadPhase(p2_phase_data, p);
+               balls.push_back(p);
+               return Game::PLAYING;
+           } else if (strcmp(fase, "fase2") == 0) {
+               std::cout << "Ganhou" << std::endl;
+               return Game::GAME_OVER;
+           } else {
+               return Game::GAME_OVER; // Fase desconhecida
+           }
+       }
+   }
     EndDrawing();
     
     return game_state; // Retorna o estado do jogo
@@ -301,11 +449,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
             break;
         default:
             // Fim da cinemática, transita para o jogo
-            strcpy(fase, "fase1");
-            p_walls = p1_walls;
-            walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-            p.setPosition(100, 500); // Define a posição inicial do jogador 
-            return PLAYING;
+            timer = 0.0f;
+            return CHARACTER_SELECTION;
     }
 
     if (timer >= frameDuration) {
@@ -315,11 +460,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
 
     // Pular cinemática com ENTER
     if (IsKeyPressed(KEY_ENTER)) {
-        strcpy(fase, "fase1");
-        p_walls = p1_walls;
-        walls.insert(walls.end(), p_walls.begin(), p_walls.end());
-        p.setPosition(100, 500);
-        return PLAYING;
+        timer = 0.0f;
+        return CHARACTER_SELECTION;
     }
     DrawText("Pressione ENTER para pular", screenWidth - 200, screenHeight - 20, 10, WHITE);
 
@@ -333,6 +475,16 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
 Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
+
+    // Bloco contagem de tempo
+    playTimer += GetFrameTime();
+    int totalSeconds = (int)playTimer;
+    int minutes = totalSeconds / 60;
+    int seconds = totalSeconds % 60;
+    DrawText(TextFormat("Tempo: %02d:%02d", minutes, seconds), 10, screenHeight-30, 20, WHITE);
+
+    // exibe a pontuacao na pontuao
+    DrawText(TextFormat("Score: %d", p.score), 20, 10, 20, RED);
     
     if (balls.empty()) { // verifica se há bolas
         EndDrawing();
@@ -349,6 +501,27 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     for (auto &seg : p_walls) { 
         DrawLineV(seg.first, seg.second, RED);
     }
+
+    //verifica LeBall
+    float timeleBall = GetFrameTime();
+    if (leBallActive) {
+        leBallTimer -= timeleBall;
+        if (leBallTimer <= 0.0f) 
+        {
+            leBallActive = false; // Desativa LeBall após o tempo acabar
+        }         
+    }
+    if(leBallCooldown > 0.0f) {
+        leBallCooldown -= timeleBall; 
+    }
+
+    if (leBallActive)
+    {
+        Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
+        Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+        DrawLineV(leBallWallStart, leBallWallEnd, PURPLE);
+    }
+    
 
     // --- Colisão com Bumpers ---
     float deltaTime = GetFrameTime(); // Tempo entre frames para animação
@@ -370,7 +543,15 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 penetration = minDistance - distance;
 
                 bumper.onHit(); // Ativa o efeito visual do bumper
-                PlaySound(bumpsound); 
+                PlaySound(bumperSound); // Toca o som do bumper
+
+                //pontuacao para cada bumper
+                if (ball.characterId == 1) {
+                    p.score += bumper.scoreValue * 2;
+                }
+                else {
+                    p.score += bumper.scoreValue;
+                }
 
                 // Separação para evitar que a bola fique presa
                 ballPos = Add(ballPos, Scale(normal, penetration)); 
@@ -436,7 +617,64 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     DrawCircleV(leftFlipperPos, 10.0f, GRAY);   // Ponto de rotação
     DrawCircleV(rightFlipperPos, 10.0f, GRAY);  // Ponto de rotação
 
+    // --- Lógica do Lançador (Plunger) ---
+    // Verifica se a bola está na área do lançador (usando as variáveis do construtor)
+    ballInLauncher = false;
+    for (auto& ball : balls) {
+        if (ball.x >= (launcherAreaPos.x - 20.0f) && ball.x <= (launcherAreaPos.x + launcherAreaWidth + 20.0f) && 
+            ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
+            ballInLauncher = true;
+            break;
+        }
+    }
 
+    // Input do lançador (tecla SPACE)
+    if (ballInLauncher && IsKeyDown(KEY_SPACE)) {
+        plungerCharging = true;
+        plungerCurrentPower += GetFrameTime() * 500.0f; // Carrega a força
+        if (plungerCurrentPower > plungerMaxPower) {
+            plungerCurrentPower = plungerMaxPower;
+        }
+    } else if (plungerCharging && IsKeyReleased(KEY_SPACE)) {
+        // Lança a bola quando solta o SPACE
+        if (ballInLauncher) {
+            for (auto& ball : balls) {
+                if (ball.x >= (launcherAreaPos.x - 20.0f) && ball.x <= (launcherAreaPos.x + launcherAreaWidth + 20.0f) && 
+                    ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
+                    // Aplica força para cima baseada na força carregada
+                    float forceMultiplier = plungerCurrentPower / plungerMaxPower;
+                    ball.vy = -forceMultiplier * 100.0f; // Força aumentada para o lançador (negativo = para cima)
+                    ball.vx += (rand() % 3 - 1) * 0.5f; // Pequena variação horizontal aleatória
+                    PlaySound(ball_collision); // Som do lançamento
+                    
+                    // Inicia contagem de tempo após lançamento
+                    ballWasLaunched = true;
+                    timeSinceLaunch = 0.0f;
+                    break;
+                }
+            }
+        }
+        plungerCharging = false;
+        plungerCurrentPower = 0.0f;
+    }
+    
+    // Desenha o lançador (plunger) - usando as variáveis do construtor
+    Color plungerColor = plungerCharging ? RED : GRAY;
+    float plungerOffset = plungerCharging ? (plungerCurrentPower / plungerMaxPower) * 25.0f : 0.0f;
+    DrawRectangle(plungerPos.x, plungerPos.y + plungerOffset, plungerWidth, plungerHeight, plungerColor);
+    
+    // Desenha barra de força do lançador (usando as variáveis do construtor)
+    if (ballInLauncher) {
+        DrawText("SPACE para lançar", launcherAreaPos.x - 150, launcherAreaPos.y - 30, 14, WHITE);
+        if (plungerCharging) {
+            float barWidth = 100.0f;
+            float barHeight = 10.0f;
+            float powerPercent = plungerCurrentPower / plungerMaxPower;
+            DrawRectangle(launcherAreaPos.x - 20, launcherAreaPos.y - 15, barWidth, barHeight, DARKGRAY);
+            DrawRectangle(launcherAreaPos.x - 20, launcherAreaPos.y - 15, barWidth * powerPercent, barHeight, 
+                         powerPercent < 0.7f ? GREEN : (powerPercent < 0.9f ? YELLOW : RED));
+        }
+    }
     
     // Começando a colocar os poderes aqui, já que a bola era controlada aqui
     if (balls[0].characterId == 0) {
@@ -450,6 +688,27 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls[0].vy -= balls[0].vy * breakForce;
         }
     }
+
+    if (balls[0].characterId == 2)  // LeBall
+    {
+        if (IsKeyPressed(KEY_L) && !leBallActive && leBallCooldown <= 0.0f) 
+        {
+            leBallActive = true;
+            leBallTimer = 10.0f; // Tempo que LeBall fica ativo
+            leBallCooldown = 30.0f; // Tempo de recarga do LeBall
+        }
+        
+        if (leBallActive){
+            DrawText(TextFormat("LeBall!: %.1fs", leBallTimer), 20, 40, 16, YELLOW);            
+        }
+        else if (leBallCooldown > 0.0f) {
+            DrawText(TextFormat("LeBall disponivel em: %.1fs", leBallCooldown), 20, 40, 16, PURPLE);
+        }
+        else {
+            DrawText("Pressione L para ativar LeBall!", 20, 40, 16, YELLOW);
+        }
+    }
+    
     
     // Duet Ball apenas ativado na tecla D para testes
     if (balls[0].characterId == 5 && IsKeyPressed(KEY_D)) {
@@ -462,7 +721,55 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls.push_back(newBall);
         }
     }
-   
+    
+    // Poder de redução da gravidade
+    if (balls[0].characterId == 3) {
+        // movimentacao para testes
+        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
+        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
+        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
+        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
+        // implentacao do ppoder reducao da gravidade
+        if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
+            buttonPressTime = playTimer;
+        }
+        if (buttonPressTime >= 0.0f){
+            float elapsed = playTimer - buttonPressTime;
+            if (elapsed <= 30.0f){
+                balls[0].acelerate_y(-0.05f);
+                DrawText(TextFormat("BOOST ATIVO: %.1f segs restantes", 30.0f - elapsed), 10, 70, 20, GREEN);
+            }
+            else{
+                buttonPressTime = -1.0f;
+            }
+        }
+    }
+
+    //Poder de aumentar a bola
+    if (balls[0].characterId == 4) {
+        // movimentacao para testes
+        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
+        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
+        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
+        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
+        // implentacao do poder bola gigante
+        if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
+            buttonPressTime = playTimer;
+        }
+        if (buttonPressTime >= 0.0f){
+            float elapsed = playTimer - buttonPressTime;
+            if (elapsed <= 30.0f){
+                balls[0].radius = 25;
+                DrawText(TextFormat("BOOST ATIVO: %.1f segs restantes", 30.0f - elapsed), 10, 70, 20, GREEN);
+            }
+            else{
+                buttonPressTime = -1.0f;
+                balls[0].radius = 10;
+            }
+        }
+    }
+
+
 
     // Atualiza posição e verifica colisao com paredes
     for (auto& b : balls) {
@@ -471,14 +778,13 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         float r = b.radius;
 
         // Adiciona gravidade primeiro
-        //vel.y += 0.1f; // Simula gravidade
-
+        if (!ballInLauncher) vel.y += 0.1f; 
         // Aplica movimento
         pos.x += vel.x;
         pos.y += vel.y;
 
-        if (pos.y - r > screenHeight) {
-            game_state = SCOREBOARD; // Se cair no buraco, game over
+        if(!leBallActive && pos.y - r > screenHeight) {
+            game_state = SCOREBOARD; 
         }
         
         // Verifica colisão com paredes fixas
@@ -490,6 +796,21 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 vel = Sub(vel, Scale(normal, 2 * dot));
                 pos = Add(cp, Scale(normal, r));
                 break;
+            }
+        }
+
+        // Colisão com a parede temporária do LeBall (se ativa)
+        if (leBallActive) {
+            Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
+            Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+            Vector2 cp, normal;
+            if (CheckCollisionCircleLine(pos, r, leBallWallStart, leBallWallEnd, cp, normal)) {
+                PlaySound(ball_collision);
+                float dot = Dot(vel, normal);
+                vel = Sub(vel, Scale(normal, 2 * dot));
+                pos = Add(cp, Scale(normal, r));
+                // Impulso extra para cima quando bate na parede LeBall
+                vel.y -= 2.0f;
             }
         }
 
@@ -549,14 +870,29 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             pos.y = r;
             vel.y *= -1;
         }
-        if (pos.y + r > screenHeight && (pos.x < screenWidth/2 - HOLE_WIDTH || pos.x > screenWidth/2 + HOLE_WIDTH)) {
+        if (pos.y + r > screenHeight && (pos.x < 800.0f - HOLE_WIDTH || pos.x > 800.0f + HOLE_WIDTH)) {
             pos.y = screenHeight - r;
             vel.y *= -1;
         }
 
-        // Limita a velocidade
-        vel.x = Clamp(vel.x, -8.0f, 8.0f);
-        vel.y = Clamp(vel.y, -8.0f, 8.0f);
+        // Atualiza o tempo desde o lançamento
+        if (ballWasLaunched) {
+            timeSinceLaunch += GetFrameTime();
+            if (timeSinceLaunch >= 1.0f) {  // 1 segundo depois do lançamento
+                ballWasLaunched = false;  // Desativa o modo de velocidade alta
+            }
+        }
+
+        // Limita a velocidade baseado no tempo desde o lançamento
+        if (ballWasLaunched && timeSinceLaunch < 1.0f) {
+            // Primeiro segundo após lançamento: permite velocidade maior
+            vel.x = Clamp(vel.x, -12.0f, 12.0f);
+            vel.y = Clamp(vel.y, -30.0f, 12.0f);
+        } else {
+            // Velocidade normal após 1 segundo
+            vel.x = Clamp(vel.x, -6.0f, 6.0f);
+            vel.y = Clamp(vel.y, -6.0f, 6.0f);
+        }
 
         // Aplica a nova posição e velocidade ao objeto
         b.x = pos.x;

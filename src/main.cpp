@@ -22,7 +22,7 @@ int main() {
   while (!WindowShouldClose()) {
 
     // Open menu
-    
+    std::cout << "Fase: " << fase << std::endl;
     switch (game_state) {
       case Game::MENU:
         game_state = game.menu(game_state, fase, p);
@@ -44,6 +44,7 @@ int main() {
         break;
       case Game::GAME_OVER:
         // Placeholder for game over logic
+        BeginDrawing();
         DrawText("Game Over! Press ESC to exit.", screenWidth / 2 - 100, screenHeight / 2 - 20, 20, RED);
         if (IsKeyPressed(KEY_ESCAPE)) {
           CloseWindow();
@@ -77,7 +78,7 @@ int main() {
     
   }
 
-  UnloadSound(game.ball_collision);
+
   CloseAudioDevice();
   CloseWindow();
   return 0;

@@ -1,7 +1,7 @@
 #include "player.h"
 
 player::player(float x, float y, int radius)
-    : x(x), y(y), radius(radius), vx(0), vy(0) {}
+    : x(x), y(y), radius(radius), vx(0), vy(0), score(0) {}
 
 void player::draw() {
     DrawCircle(x,y, radius, RED);

@@ -65,34 +65,62 @@ vector<pair<Vector2, Vector2>> p2_walls = {
     {{1065, 150}, {1053, 124}},
     {{1132, 795}, {1065, 149}},
     {{1132, 795}, {1217, 796}},
+    {{507, 397} , {634, 474}}, // paredes da fase 2
+    {{494, 584} , {635, 473}},
+    {{579, 186} , {595, 152}},
+    {{635, 151} , {596, 151}},
+    {{649, 187} , {635, 150}},
+    {{692, 187} , {650, 186}},
+    {{722, 375} , {692, 188}},
+    {{733, 183}, {744, 206}},
+    {{772, 369} , {744, 205}},
+    {{873, 217} , {918, 279}},
+    {{962, 223} , {919, 277}},
+    {{999, 210} , {963, 221}},
+    {{1018, 210} , {1000, 209}},
+    {{1024, 273} , {1018, 210}},
+    {{1028, 300} , {1025, 273}},
+    {{1028, 328} , {1028, 301}},
+    {{1031, 400} , {1029, 328}},
+    {{959, 172} , {992, 162}},
+    {{1051, 163} , {993, 160}},
+    {{1067, 183} , {1052, 163}},
+    {{1026, 538} , {1105, 538}},
+    {{1029, 543} , {1030, 573}},
+    {{1028, 603} , {1030, 574}},
+    {{1020, 657} , {1028, 603}},
+    {{992, 703} , {1020, 657}},
+    {{957, 738} , {992, 703}},
+    {{956, 738}, {918, 764}},
+    //{{900, 755} , {956, 738}},
 };
 
 
 // Definição da Fase 1
 GamePhase p1_phase_data = {
-    // Paredes da Fase 1 (usando os dados que você já tinha)
+
     {p1_walls},
     // Bumpers da Fase 1 (adicionados aqui)
     {
-        Bumper({600, 700}, 30.0f, BLUE),    // Exemplo de bumper 1
-        Bumper({980, 700}, 30.0f, GREEN),    // Exemplo de bumper 2
-        Bumper({650, 350}, 50.0f, YELLOW)    // Exemplo de bumper 3
+        Bumper({600, 700}, 30.0f, BLUE, 100),    // Exemplo de bumper 1
+        Bumper({980, 700}, 30.0f, GREEN, 10),    // Exemplo de bumper 2
+        Bumper({650, 350}, 50.0f, YELLOW, 500)    // Exemplo de bumper 3
     },
-    // Posição inicial da bola para Fase 1
-    {1150, 600}
+    // Posição inicial da bola para Fase 1 (ajustada para nova posição do lançador)
+    {1150, 650}
 };
 
 // Definição da Fase 2
 GamePhase p2_phase_data = {
-    // Paredes da Fase 2 (usando os dados que você já tinha)
+
     {p2_walls},
-    // Bumpers da Fase 2 (adicionados aqui)
+
     {
-        Bumper({400, 200}, 30.0f, RED),
-        Bumper({250, 350}, 20.0f, PURPLE),
-        Bumper({550, 350}, 20.0f, ORANGE),
-        Bumper({400, 450}, 25.0f, DARKBLUE)
+        Bumper({931, 382}, 30.0f, RED, 100),
+        Bumper({990, 277}, 20.0f, PURPLE, 10),
+        Bumper({553, 396}, 20.0f, ORANGE, 500),
+        Bumper({1000, 602}, 25.0f, DARKBLUE, 300)
     },
-    // Posição inicial da bola para Fase 2
-    {100, 500}
+    // Posição inicial da bola para Fase 2 (ajustada para nova posição do lançador)
+    {1150, 650}
 };

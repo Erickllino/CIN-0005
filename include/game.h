@@ -23,7 +23,11 @@ private:
 	float timer;
 	float frameDuration;
 
-    //Music cinematicMusic;
+    bool leBallActive; // Flag para verificar se LeBall está ativo
+    float leBallTimer; // Tempo que LeBall está ativo
+    float leBallCooldown;
+
+    Sound bumperSound; // Som do bumper
 
 public:
     Game(float screenWidth, float screenHeight);
@@ -31,6 +35,8 @@ public:
     
     float screenWidth = 800;
     float screenHeight = 600;
+    float playTimer;
+    float buttonPressTime;
 
     enum GameState {
         MENU,
@@ -46,8 +52,8 @@ public:
     std::vector<player> balls;
     Vector2 initialBallPos = {1000, 500};
 
-    Sound ball_collision = LoadSound("assets/sounds/collision.wav");
-    Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
+    Sound ball_collision;
+    //Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
 
     // Variáveis para os flipers
     Vector2 leftFlipperPos;
@@ -58,6 +64,21 @@ public:
     bool leftFlipperPressed;
     bool rightFlipperPressed;
 
+    // Variáveis para o lançador (plunger)
+    Vector2 plungerPos;
+    float plungerWidth;
+    float plungerHeight;
+    float plungerMaxPower;
+    float plungerCurrentPower;
+    bool plungerCharging;
+    bool ballInLauncher;
+    Vector2 launcherAreaPos;
+    float launcherAreaWidth;
+    
+    // Variáveis para controle de velocidade após lançamento
+    float timeSinceLaunch;
+    bool ballWasLaunched;
+
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
     GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
@@ -67,12 +88,9 @@ public:
     GameState menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState continue_menu(GameState game_state, char fase[CODE_SIZE], player &p);
     GameState Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p);
-<<<<<<< HEAD
 	GameState cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p);
-=======
     void loadPhase(const GamePhase& phase, player& p);
     GameState selectCharacter(GameState game_state, char fase[CODE_SIZE], player &p);
->>>>>>> 42bf388eb0f9861d929b17a37d17dc230a474b8d
 
 };
 
