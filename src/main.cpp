@@ -78,7 +78,7 @@ int main() {
     
   }
 
-  UnloadSound(game.ball_collision);
+
   CloseAudioDevice();
   CloseWindow();
   return 0;

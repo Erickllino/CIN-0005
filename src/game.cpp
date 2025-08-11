@@ -15,6 +15,9 @@ Game::Game(float width, float height) {
 	alienship = LoadTexture("assets/images/alienship.png");
 	alienPinball = LoadTexture("assets/images/alienpinball.png");
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
+	select_fundo = LoadTexture("assets/images/select_fundo1.png");
+    bumperSound = LoadSound("assets/sounds/bumper.wav");
+    ball_collision = LoadSound("assets/sounds/collision.wav");
 
 	frame = 0;
 	timer = 0.0f;
@@ -23,12 +26,17 @@ Game::Game(float width, float height) {
     //cinematicMusic = LoadMusicStream("assets/sounds/cinematic_music.mp3");
     //SetMusicVolume(cinematicMusic, 0.5f);
 
+    //Inicializa o LeBall
+    leBallActive = false;
+    leBallTimer = 0.0f;
+    leBallCooldown = 0.0f; 
+
     // Paredes externas
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo
-        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo
+        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo esquerdo
+        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo direito
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
@@ -40,6 +48,21 @@ Game::Game(float width, float height) {
     rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
     leftFlipperPressed = false;
     rightFlipperPressed = false;
+
+    // Inicializa variáveis do lançador (plunger)
+    launcherAreaWidth = 80.0f;
+    launcherAreaPos = {1125.0f, 350.0f};  // Movido mais para a esquerda
+    plungerWidth = 70.0f;  // Aumentado o tamanho
+    plungerHeight = 20.0f;  // Aumentado o tamanho
+    plungerPos = {1140.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
+    plungerMaxPower = 800.0f;  // Força máxima do lançador
+    plungerCurrentPower = 0.0f;
+    plungerCharging = false;
+    ballInLauncher = false;
+
+    // Inicializa variáveis de controle de tempo após lançamento
+    timeSinceLaunch = 0.0f;
+    ballWasLaunched = false;
 
 }
 
@@ -54,7 +77,9 @@ Game::~Game() {
 	UnloadTexture(alienship);
 	UnloadTexture(alienPinball);
 	UnloadTexture(pinballBall);
-    //UnloadMusicStream(cinematicMusic);
+    UnloadTexture(select_fundo);
+    UnloadSound(bumperSound);
+    UnloadSound(ball_collision);
 }
 
 // Função de menu (placeholder)
@@ -133,17 +158,28 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
 
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Selecione seu personagem", screenWidth / 2 - 150, 50, 20, WHITE);
+
+    float scaleX = (float)screenWidth * 0.8f / select_fundo.width;
+    float scaleY = (float)screenHeight * 0.8f / select_fundo.height;
+    float scale = fmaxf(scaleX, scaleY); 
+    Vector2 pos = { 
+        (screenWidth - select_fundo.width * scale) / 2.0f,
+        (screenHeight - select_fundo.height * scale) / 2.0f
+    };
+    DrawTextureEx(select_fundo, pos, 0.0f, scale, WHITE);
 
     Vector2 mousePos = GetMousePosition();
 
     for (int i = 0; i < numCharacters; i++) {
-        Rectangle btn = { screenWidth / 2 - 200, 100.0f + i * 70.0f, 400, 50 };
+        Rectangle btn = { screenWidth / 2 - 200, 250.0f + i * 70.0f, 400, 50 };
         bool hovered = CheckCollisionPointRec(mousePos, btn);
 
-        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : DARKGRAY);
-        DrawText(characterNames[i], btn.x + 10, btn.y + 10, 20, RED);
-        DrawText(characterPowers[i], btn.x + 220, btn.y + 10, 16, WHITE);
+        Color verdeagua = {43, 253, 175, 255};
+        Color vermelhobbd = {252, 16, 87, 255};
+        Color roxolegal = {171, 25, 111, 255};
+        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : verdeagua);
+        DrawText(characterNames[i], btn.x + 10, btn.y + 15, 20, vermelhobbd);
+        DrawText(characterPowers[i], btn.x + 80, btn.y + 33, 16, roxolegal);
 
         if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             selectedCharacter = i;
@@ -469,6 +505,27 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         DrawLineV(seg.first, seg.second, RED);
     }
 
+    //verifica LeBall
+    float timeleBall = GetFrameTime();
+    if (leBallActive) {
+        leBallTimer -= timeleBall;
+        if (leBallTimer <= 0.0f) 
+        {
+            leBallActive = false; // Desativa LeBall após o tempo acabar
+        }         
+    }
+    if(leBallCooldown > 0.0f) {
+        leBallCooldown -= timeleBall; 
+    }
+
+    if (leBallActive)
+    {
+        Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
+        Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+        DrawLineV(leBallWallStart, leBallWallEnd, PURPLE);
+    }
+    
+
     // --- Colisão com Bumpers ---
     float deltaTime = GetFrameTime(); // Tempo entre frames para animação
     for (Bumper& bumper : bumpers) {
@@ -489,7 +546,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 penetration = minDistance - distance;
 
                 bumper.onHit(); // Ativa o efeito visual do bumper
-                PlaySound(bumpsound); 
+                PlaySound(bumperSound); // Toca o som do bumper
 
                 //pontuacao para cada bumper
                 if (ball.characterId == 1) {
@@ -563,7 +620,64 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     DrawCircleV(leftFlipperPos, 10.0f, GRAY);   // Ponto de rotação
     DrawCircleV(rightFlipperPos, 10.0f, GRAY);  // Ponto de rotação
 
+    // --- Lógica do Lançador (Plunger) ---
+    // Verifica se a bola está na área do lançador (usando as variáveis do construtor)
+    ballInLauncher = false;
+    for (auto& ball : balls) {
+        if (ball.x >= (launcherAreaPos.x - 20.0f) && ball.x <= (launcherAreaPos.x + launcherAreaWidth + 20.0f) && 
+            ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
+            ballInLauncher = true;
+            break;
+        }
+    }
 
+    // Input do lançador (tecla SPACE)
+    if (ballInLauncher && IsKeyDown(KEY_SPACE)) {
+        plungerCharging = true;
+        plungerCurrentPower += GetFrameTime() * 500.0f; // Carrega a força
+        if (plungerCurrentPower > plungerMaxPower) {
+            plungerCurrentPower = plungerMaxPower;
+        }
+    } else if (plungerCharging && IsKeyReleased(KEY_SPACE)) {
+        // Lança a bola quando solta o SPACE
+        if (ballInLauncher) {
+            for (auto& ball : balls) {
+                if (ball.x >= (launcherAreaPos.x - 20.0f) && ball.x <= (launcherAreaPos.x + launcherAreaWidth + 20.0f) && 
+                    ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
+                    // Aplica força para cima baseada na força carregada
+                    float forceMultiplier = plungerCurrentPower / plungerMaxPower;
+                    ball.vy = -forceMultiplier * 100.0f; // Força aumentada para o lançador (negativo = para cima)
+                    ball.vx += (rand() % 3 - 1) * 0.5f; // Pequena variação horizontal aleatória
+                    PlaySound(ball_collision); // Som do lançamento
+                    
+                    // Inicia contagem de tempo após lançamento
+                    ballWasLaunched = true;
+                    timeSinceLaunch = 0.0f;
+                    break;
+                }
+            }
+        }
+        plungerCharging = false;
+        plungerCurrentPower = 0.0f;
+    }
+    
+    // Desenha o lançador (plunger) - usando as variáveis do construtor
+    Color plungerColor = plungerCharging ? RED : GRAY;
+    float plungerOffset = plungerCharging ? (plungerCurrentPower / plungerMaxPower) * 25.0f : 0.0f;
+    DrawRectangle(plungerPos.x, plungerPos.y + plungerOffset, plungerWidth, plungerHeight, plungerColor);
+    
+    // Desenha barra de força do lançador (usando as variáveis do construtor)
+    if (ballInLauncher) {
+        DrawText("SPACE para lançar", launcherAreaPos.x - 150, launcherAreaPos.y - 30, 14, WHITE);
+        if (plungerCharging) {
+            float barWidth = 100.0f;
+            float barHeight = 10.0f;
+            float powerPercent = plungerCurrentPower / plungerMaxPower;
+            DrawRectangle(launcherAreaPos.x - 20, launcherAreaPos.y - 15, barWidth, barHeight, DARKGRAY);
+            DrawRectangle(launcherAreaPos.x - 20, launcherAreaPos.y - 15, barWidth * powerPercent, barHeight, 
+                         powerPercent < 0.7f ? GREEN : (powerPercent < 0.9f ? YELLOW : RED));
+        }
+    }
     
     // Começando a colocar os poderes aqui, já que a bola era controlada aqui
     if (balls[0].characterId == 0) {
@@ -577,6 +691,27 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls[0].vy -= balls[0].vy * breakForce;
         }
     }
+
+    if (balls[0].characterId == 2)  // LeBall
+    {
+        if (IsKeyPressed(KEY_L) && !leBallActive && leBallCooldown <= 0.0f) 
+        {
+            leBallActive = true;
+            leBallTimer = 10.0f; // Tempo que LeBall fica ativo
+            leBallCooldown = 30.0f; // Tempo de recarga do LeBall
+        }
+        
+        if (leBallActive){
+            DrawText(TextFormat("LeBall!: %.1fs", leBallTimer), 20, 40, 16, YELLOW);            
+        }
+        else if (leBallCooldown > 0.0f) {
+            DrawText(TextFormat("LeBall disponivel em: %.1fs", leBallCooldown), 20, 40, 16, PURPLE);
+        }
+        else {
+            DrawText("Pressione L para ativar LeBall!", 20, 40, 16, YELLOW);
+        }
+    }
+    
     
     // Duet Ball apenas ativado na tecla D para testes
     if (balls[0].characterId == 5 && IsKeyPressed(KEY_D)) {
@@ -598,14 +733,13 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         float r = b.radius;
 
         // Adiciona gravidade primeiro
-        //vel.y += 0.1f; // Simula gravidade
-
+        if (!ballInLauncher) vel.y += 0.1f; 
         // Aplica movimento
         pos.x += vel.x;
         pos.y += vel.y;
 
-        if (pos.y - r > screenHeight) {
-            game_state = SCOREBOARD; // Se cair no buraco, game over
+        if(!leBallActive && pos.y - r > screenHeight) {
+            game_state = SCOREBOARD; 
         }
         
         // Verifica colisão com paredes fixas
@@ -617,6 +751,21 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 vel = Sub(vel, Scale(normal, 2 * dot));
                 pos = Add(cp, Scale(normal, r));
                 break;
+            }
+        }
+
+        // Colisão com a parede temporária do LeBall (se ativa)
+        if (leBallActive) {
+            Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
+            Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+            Vector2 cp, normal;
+            if (CheckCollisionCircleLine(pos, r, leBallWallStart, leBallWallEnd, cp, normal)) {
+                PlaySound(ball_collision);
+                float dot = Dot(vel, normal);
+                vel = Sub(vel, Scale(normal, 2 * dot));
+                pos = Add(cp, Scale(normal, r));
+                // Impulso extra para cima quando bate na parede LeBall
+                vel.y -= 2.0f;
             }
         }
 
@@ -681,9 +830,24 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             vel.y *= -1;
         }
 
-        // Limita a velocidade
-        vel.x = Clamp(vel.x, -6.0f, 6.0f);
-        vel.y = Clamp(vel.y, -6.0f, 6.0f);
+        // Atualiza o tempo desde o lançamento
+        if (ballWasLaunched) {
+            timeSinceLaunch += GetFrameTime();
+            if (timeSinceLaunch >= 1.0f) {  // 1 segundo depois do lançamento
+                ballWasLaunched = false;  // Desativa o modo de velocidade alta
+            }
+        }
+
+        // Limita a velocidade baseado no tempo desde o lançamento
+        if (ballWasLaunched && timeSinceLaunch < 1.0f) {
+            // Primeiro segundo após lançamento: permite velocidade maior
+            vel.x = Clamp(vel.x, -12.0f, 12.0f);
+            vel.y = Clamp(vel.y, -30.0f, 12.0f);
+        } else {
+            // Velocidade normal após 1 segundo
+            vel.x = Clamp(vel.x, -6.0f, 6.0f);
+            vel.y = Clamp(vel.y, -6.0f, 6.0f);
+        }
 
         // Aplica a nova posição e velocidade ao objeto
         b.x = pos.x;

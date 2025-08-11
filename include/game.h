@@ -18,12 +18,17 @@ private:
 	Texture2D alienship;
 	Texture2D alienPinball;
 	Texture2D pinballBall;
+    Texture2D select_fundo;
 
 	int frame;
 	float timer;
 	float frameDuration;
 
-    //Music cinematicMusic;
+    bool leBallActive; // Flag para verificar se LeBall está ativo
+    float leBallTimer; // Tempo que LeBall está ativo
+    float leBallCooldown;
+
+    Sound bumperSound; // Som do bumper
 
 public:
     Game(float screenWidth, float screenHeight);
@@ -46,8 +51,8 @@ public:
     std::vector<player> balls;
     Vector2 initialBallPos = {1000, 500};
 
-    Sound ball_collision = LoadSound("assets/sounds/collision.wav");
-    Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
+    Sound ball_collision;
+    //Sound bumpsound = LoadSound("assets/sounds/bumper.wav");
 
     // Variáveis para os flipers
     Vector2 leftFlipperPos;
@@ -57,6 +62,21 @@ public:
     float flipperLength;
     bool leftFlipperPressed;
     bool rightFlipperPressed;
+
+    // Variáveis para o lançador (plunger)
+    Vector2 plungerPos;
+    float plungerWidth;
+    float plungerHeight;
+    float plungerMaxPower;
+    float plungerCurrentPower;
+    bool plungerCharging;
+    bool ballInLauncher;
+    Vector2 launcherAreaPos;
+    float launcherAreaWidth;
+    
+    // Variáveis para controle de velocidade após lançamento
+    float timeSinceLaunch;
+    bool ballWasLaunched;
 
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
