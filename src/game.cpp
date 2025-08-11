@@ -79,6 +79,21 @@ void Game::loadPhase(const GamePhase& phase, player& p) {
     this->p_walls = phase.walls;
     this->bumpers = phase.bumpers;
     p.setPosition(phase.initialBallPosition.x, phase.initialBallPosition.y);
+    
+    // Reinicia a música quando carrega uma nova fase
+    restartMusic();
+}
+
+void Game::restartMusic() {
+    // Para a música atual
+    StopMusicStream(gameMusic);
+    
+    // Reinicia a música do início
+    PlayMusicStream(gameMusic);
+    SetMusicVolume(gameMusic, 0.5f);
+    
+    // Marca como carregada para evitar conflitos
+    musicLoaded = true;
 }
 
 //descarrega texturas e musica
