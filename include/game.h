@@ -29,6 +29,8 @@ private:
     float leBallCooldown;
 
     Sound bumperSound; // Som do bumper
+    Music gameMusic; // Música do jogo
+    bool musicLoaded; // Flag para verificar se a música foi carregada
 
 public:
     Game(float screenWidth, float screenHeight);

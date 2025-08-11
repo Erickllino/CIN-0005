@@ -19,6 +19,10 @@ Game::Game(float width, float height) {
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
 
+    // Carrega a música do jogo apenas uma vez (com verificação robusta)
+    gameMusic = LoadMusicStream("assets/sounds/spacejam.mp3");
+    musicLoaded = false; // Flag para controlar quando iniciar a música
+
 	frame = 0;
 	timer = 0.0f;
 	frameDuration = 5.0f;
@@ -84,6 +88,9 @@ Game::~Game() {
     UnloadTexture(select_fundo);
     UnloadSound(bumperSound);
     UnloadSound(ball_collision);
+    
+    // Descarrega a música sem parar explicitamente (o Raylib cuida disso)
+    UnloadMusicStream(gameMusic);
 }
 
 // Função de menu (placeholder)
@@ -493,14 +500,15 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     BeginDrawing();
     ClearBackground(BLACK);
 
+    // Inicializa a música apenas uma vez quando entra no jogo
+    if (!musicLoaded) {
+        PlayMusicStream(gameMusic);
+        SetMusicVolume(gameMusic, 0.5f);
+        musicLoaded = true;
+    }
 
-    Music music;
-    music = LoadMusicStream("assets/sounds/spacejam.mp3");
-
-    PlayMusicStream(music);
-    SetMusicVolume(music, 0.5f);
-
-    UpdateMusicStream(music);
+    // Atualiza a música apenas uma vez por frame
+    UpdateMusicStream(gameMusic);
 
     // Bloco contagem de tempo
     playTimer += GetFrameTime();
