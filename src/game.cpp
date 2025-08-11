@@ -15,6 +15,7 @@ Game::Game(float width, float height) {
 	alienship = LoadTexture("assets/images/alienship.png");
 	alienPinball = LoadTexture("assets/images/alienpinball.png");
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
+	menu_fundo = LoadTexture("assets/images/menu_fundo1.png");
 	select_fundo = LoadTexture("assets/images/select_fundo1.png");
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
@@ -85,6 +86,7 @@ Game::~Game() {
 	UnloadTexture(alienship);
 	UnloadTexture(alienPinball);
 	UnloadTexture(pinballBall);
+	UnloadTexture(menu_fundo);
     UnloadTexture(select_fundo);
     UnloadSound(bumperSound);
     UnloadSound(ball_collision);
@@ -98,45 +100,85 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
 
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Menu Placeholder", screenWidth / 2 - 100, screenHeight / 2 - 200, 20, WHITE);
     
-    // Desenha o botão "New Game"
-    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, GRAY);
-    DrawText("New Game", screenWidth / 2 - 50, screenHeight / 2 - 135, 20, RED);
+    float scaleX = (float)screenWidth * 0.8f / menu_fundo.width;
+    float scaleY = (float)screenHeight * 0.8f / menu_fundo.height;
+    float scale = fmaxf(scaleX, scaleY); 
+    Vector2 pos = { 
+        (screenWidth - menu_fundo.width * scale) / 2.0f,
+        (screenHeight - menu_fundo.height * scale) / 2.0f
+    };
+    DrawTextureEx(menu_fundo, pos, 0.0f, scale, WHITE);
+
+    // desenhando botoes de acordo com o fundo
+    float baseX = pos.x + (menu_fundo.width * scale);
+    float baseY = pos.y + (menu_fundo.height * scale);
     
-    // Desenha o botão "Continue"
-    DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, GRAY);
-    DrawText("Continue", screenWidth / 2 - 50, screenHeight / 2 - 35, 20, RED);
+    // botão "start" 
+    Vector2 startcenter = {
+        baseX * 0.67f, 
+        baseY * 0.83f 
+    };
+    float buttonRadius = 50.0f * scale; 
+    
+    // botão "select phase" 
+    Vector2 selectPhaseCenter = {
+        baseX * 0.74f, 
+        baseY * 0.60f  
+    };
+    float selectradius = 40.0f * scale;
+    
+    // Botão "credits" 
+    Vector2 creditsCenter = {
+        baseX * 0.88f, 
+        baseY * 0.75f  
+    };
+    float creditsRadius = 25.0f * scale; // a bola é menor
+    
 
     DrawText("Press ESC to exit", screenWidth / 2 - 100, screenHeight - 20 , 20, WHITE);
 
-    Vector2 mousePos = GetMousePosition();
-    if (mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
-        mousePos.y >= screenHeight / 2 - 150 && mousePos.y <= screenHeight / 2 - 100) {
+    Vector2 mousePos = GetMousePosition(); //pos do mouse
+
+
+    //achando botão start
+    float diststart = Length(Sub(mousePos, startcenter));
+
+    if (diststart <= buttonRadius) {
         
-            DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 150, 300, 50}, 0.5,0, RAYWHITE);
-            DrawText("New Game", screenWidth / 2 - 50 , screenHeight / 2 - 135, 20, RED);
+        DrawCircleV(startcenter, buttonRadius + 5, Fade(WHITE, 0.3f));
+
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 p.score = 0; // reseta a pontuacao
                 strcpy(fase, "fase1");
                 balls.clear();
                 loadPhase(p1_phase_data, p); // Carrega a fase 1
                 balls.push_back(p);
+                // enddrawing();
                 return CINEMATIC; // Muda para o estado cinematográfico
             }
+    } else { 
+            DrawCircleV(startcenter, buttonRadius, Fade(GRAY, 0.5f));
+    }
+
+    // achando select
+    float distSelectPhase = Length(Sub(mousePos, selectPhaseCenter));
+
+    if (distSelectPhase <= selectradius) {
+        DrawCircleV(selectPhaseCenter, selectradius + 5, Fade(WHITE, 0.3f));
         
-    }else if(mousePos.x >= screenWidth / 2 - 150 && mousePos.x <= screenWidth / 2 + 150 &&
-        mousePos.y >= screenHeight / 2 - 50 && mousePos.y <= screenHeight / 2) {
-        
-        DrawRectangleRounded({screenWidth / 2 - 150, screenHeight / 2 - 50, 300, 50}, 0.5,0, RAYWHITE);
-        DrawText("Continue", screenWidth / 2 - 50 , screenHeight / 2 - 35, 20, RED);
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             EndDrawing();
-            return CONTINUE_MENU;
+            return CONTINUE_MENU; 
         }
-        
+    } else {
+        // Desenha botão normal
+        DrawCircleV(selectPhaseCenter, selectradius, Fade(GRAY, 0.5f));
+    }
 
-    }else if (IsKeyPressed(KEY_ESCAPE)) {
+    //achando credits vai ser do mesmo jeito que os anteriores,
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
         return GAME_OVER; // Sai do menu
     }
     EndDrawing();

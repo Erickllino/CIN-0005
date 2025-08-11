@@ -18,6 +18,7 @@ private:
 	Texture2D alienship;
 	Texture2D alienPinball;
 	Texture2D pinballBall;
+    Texture2D menu_fundo;
     Texture2D select_fundo;
 
 	int frame;

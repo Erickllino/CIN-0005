@@ -21,28 +21,6 @@ Bumper::Bumper(Vector2 pos, float r, Color c, int score) :
     hitTimer(0.0f)
 { }
 
-Bumper::Bumper(const Bumper& other) :
-    position(other.position),
-    radius(other.radius),
-    originalRadius(other.originalRadius),
-    color(other.color),
-    scoreValue(other.scoreValue),
-    isHit(other.isHit),
-    hitTimer(other.hitTimer)
-{ }
-
-Bumper& Bumper::operator=(const Bumper& other) {
-    if (this != &other) {
-        position = other.position;
-        radius = other.radius;
-        originalRadius = other.originalRadius;
-        color = other.color;
-        isHit = other.isHit;
-        hitTimer = other.hitTimer;
-    }
-    return *this;
-}
-
 void Bumper::draw() {
     DrawCircleV(position, radius, color);
 }
