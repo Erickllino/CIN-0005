@@ -10,14 +10,12 @@ float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 Game::Game(float width, float height) {
     screenWidth = width;
     screenHeight = height;
-    playTimer = 0.0f;
-    buttonPressTime = -1.0f;
 
 	//carrega textura
 	alienship = LoadTexture("assets/images/alienship.png");
 	alienPinball = LoadTexture("assets/images/alienpinball.png");
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
-
+	select_fundo = LoadTexture("assets/images/select_fundo1.png");
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
 
@@ -64,6 +62,7 @@ Game::~Game() {
 	UnloadTexture(alienship);
 	UnloadTexture(alienPinball);
 	UnloadTexture(pinballBall);
+    UnloadTexture(select_fundo);
     UnloadSound(bumperSound);
     UnloadSound(ball_collision);
 }
@@ -137,24 +136,35 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
         "- Controla Ball: controla a bola levemente",
         "- Score Ball: pontuação 2x",
         "- Trava Ball: protege para a bola não cair",
-        "- Slash Ball: causa dano ao redor", // mudou para red. da gravidade
-        "- Vamp Ball: recupera vida com impacto", // mudou para bola gigante
+        "- Slash Ball: causa dano ao redor",
+        "- Vamp Ball: recupera vida com impacto",
         "- Duet Ball: invoca outras bolas (máx 4)"
     };
 
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Selecione seu personagem", screenWidth / 2 - 150, 50, 20, WHITE);
+
+    float scaleX = (float)screenWidth * 0.8f / select_fundo.width;
+    float scaleY = (float)screenHeight * 0.8f / select_fundo.height;
+    float scale = fmaxf(scaleX, scaleY); 
+    Vector2 pos = { 
+        (screenWidth - select_fundo.width * scale) / 2.0f,
+        (screenHeight - select_fundo.height * scale) / 2.0f
+    };
+    DrawTextureEx(select_fundo, pos, 0.0f, scale, WHITE);
 
     Vector2 mousePos = GetMousePosition();
 
     for (int i = 0; i < numCharacters; i++) {
-        Rectangle btn = { screenWidth / 2 - 200, 100.0f + i * 70.0f, 400, 50 };
+        Rectangle btn = { screenWidth / 2 - 200, 250.0f + i * 70.0f, 400, 50 };
         bool hovered = CheckCollisionPointRec(mousePos, btn);
 
-        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : DARKGRAY);
-        DrawText(characterNames[i], btn.x + 10, btn.y + 10, 20, RED);
-        DrawText(characterPowers[i], btn.x + 220, btn.y + 10, 16, WHITE);
+        Color verdeagua = {43, 253, 175, 255};
+        Color vermelhobbd = {252, 16, 87, 255};
+        Color roxolegal = {171, 25, 111, 255};
+        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : verdeagua);
+        DrawText(characterNames[i], btn.x + 10, btn.y + 15, 20, vermelhobbd);
+        DrawText(characterPowers[i], btn.x + 80, btn.y + 33, 16, roxolegal);
 
         if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             selectedCharacter = i;
@@ -461,13 +471,6 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     BeginDrawing();
     ClearBackground(BLACK);
 
-    // Bloco contagem de tempo
-    playTimer += GetFrameTime();
-    int totalSeconds = (int)playTimer;
-    int minutes = totalSeconds / 60;
-    int seconds = totalSeconds % 60;
-    DrawText(TextFormat("Tempo: %02d:%02d", minutes, seconds), 10, screenHeight-30, 20, WHITE);
-
     // exibe a pontuacao na pontuao
     DrawText(TextFormat("Score: %d", p.score), 20, 10, 20, RED);
     
@@ -649,55 +652,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls.push_back(newBall);
         }
     }
-    
-    // Poder de redução da gravidade
-    if (balls[0].characterId == 3) {
-        // movimentacao para testes
-        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
-        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
-        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
-        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
-        // implentacao do ppoder reducao da gravidade
-        if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
-            buttonPressTime = playTimer;
-        }
-        if (buttonPressTime >= 0.0f){
-            float elapsed = playTimer - buttonPressTime;
-            if (elapsed <= 30.0f){
-                balls[0].acelerate_y(-0.05f);
-                DrawText(TextFormat("BOOST ATIVO: %.1f segs restantes", 30.0f - elapsed), 10, 70, 20, GREEN);
-            }
-            else{
-                buttonPressTime = -1.0f;
-            }
-        }
-    }
-
-    //Poder de aumentar a bola
-    if (balls[0].characterId == 4) {
-        // movimentacao para testes
-        if (IsKeyDown(KEY_UP))    balls[0].acelerate_y(-0.1f);
-        if (IsKeyDown(KEY_DOWN))  balls[0].acelerate_y(0.1f);
-        if (IsKeyDown(KEY_LEFT))  balls[0].acelerate_x(-0.1f);
-        if (IsKeyDown(KEY_RIGHT)) balls[0].acelerate_x(0.1f);
-        // implentacao do poder bola gigante
-        if (IsKeyPressed(KEY_D) && buttonPressTime < 0.0f){
-            buttonPressTime = playTimer;
-        }
-        if (buttonPressTime >= 0.0f){
-            float elapsed = playTimer - buttonPressTime;
-            if (elapsed <= 30.0f){
-                balls[0].radius = 25;
-                DrawText(TextFormat("BOOST ATIVO: %.1f segs restantes", 30.0f - elapsed), 10, 70, 20, GREEN);
-            }
-            else{
-                buttonPressTime = -1.0f;
-                balls[0].radius = 10;
-            }
-        }
-    }
-
-
+   
 
     // Atualiza posição e verifica colisao com paredes
     for (auto& b : balls) {

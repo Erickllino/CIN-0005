@@ -18,6 +18,7 @@ private:
 	Texture2D alienship;
 	Texture2D alienPinball;
 	Texture2D pinballBall;
+    Texture2D select_fundo;
 
 	int frame;
 	float timer;
@@ -35,8 +36,6 @@ public:
     
     float screenWidth = 800;
     float screenHeight = 600;
-    float playTimer;
-    float buttonPressTime;
 
     enum GameState {
         MENU,
