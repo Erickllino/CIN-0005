@@ -57,7 +57,7 @@ Game::Game(float width, float height) {
     plungerWidth = 70.0f;  // Aumentado o tamanho
     plungerHeight = 20.0f;  // Aumentado o tamanho
     plungerPos = {1140.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
-    plungerMaxPower = 800.0f;  // Força máxima do lançador
+    plungerMaxPower = 100.0f;  // Força máxima do lançador
     plungerCurrentPower = 0.0f;
     plungerCharging = false;
     ballInLauncher = false;
@@ -296,7 +296,7 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
         "Lebron James ",    
         "Neymar ",
         "Vasco da Gama",
-        ""
+        "O Monitor"
     };
 
 
@@ -395,15 +395,45 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
                return Game::PLAYING;
            } else if (strcmp(fase, "fase2") == 0) {
                std::cout << "Ganhou" << std::endl;
-               return Game::GAME_OVER;
-           } else {
-               return Game::GAME_OVER; // Fase desconhecida
-           }
-       }
+               return Game::YOU_WIN;
+           } 
+       }else {
+            return Game::GAME_OVER; // Fase desconhecida
+        }
    }
     EndDrawing();
     
     return game_state; // Retorna o estado do jogo
+}
+
+Game::GameState Game::win_screen(GameState game_state, char fase[CODE_SIZE], player &p) {
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Você venceu!", screenWidth / 2 - MeasureText("Você venceu!", 40) / 2, screenHeight / 2 - 20, 40, GREEN);
+    DrawText("Pressione ENTER para continuar", screenWidth / 2 - MeasureText("Pressione ENTER para continuar", 20) / 2, screenHeight / 2 + 30, 20, WHITE);
+    EndDrawing();
+
+    if (IsKeyPressed(KEY_ENTER)) {
+        return Game::MENU;
+    }
+
+    return game_state;
+}
+
+Game::GameState Game::game_over_screen(GameState game_state, char fase[CODE_SIZE], player &p) {
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawText("Game Over", screenWidth / 2 - MeasureText("Game Over", 40) / 2, screenHeight / 2 - 20, 40, RED);
+    DrawText("Pressione ENTER para continuar", screenWidth / 2 - MeasureText("Pressione ENTER para continuar", 20) / 2, screenHeight / 2 + 30, 20, WHITE);
+    EndDrawing();
+
+    if (IsKeyPressed(KEY_ENTER)) {
+        return Game::MENU;
+    }
+
+    return game_state;
 }
 
 Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE], player &p) {
@@ -643,7 +673,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                     ball.y >= launcherAreaPos.y && ball.y <= (plungerPos.y + 30.0f)) {
                     // Aplica força para cima baseada na força carregada
                     float forceMultiplier = plungerCurrentPower / plungerMaxPower;
-                    ball.vy = -forceMultiplier * 100.0f; // Força aumentada para o lançador (negativo = para cima)
+                    ball.vy = -forceMultiplier * 25.0f; // Força aumentada para o lançador (negativo = para cima)
                     ball.vx += (rand() % 3 - 1) * 0.5f; // Pequena variação horizontal aleatória
                     PlaySound(ball_collision); // Som do lançamento
                     
