@@ -64,6 +64,21 @@ public:
     bool leftFlipperPressed;
     bool rightFlipperPressed;
 
+    // Variáveis para o lançador (plunger)
+    Vector2 plungerPos;
+    float plungerWidth;
+    float plungerHeight;
+    float plungerMaxPower;
+    float plungerCurrentPower;
+    bool plungerCharging;
+    bool ballInLauncher;
+    Vector2 launcherAreaPos;
+    float launcherAreaWidth;
+    
+    // Variáveis para controle de velocidade após lançamento
+    float timeSinceLaunch;
+    bool ballWasLaunched;
+
     vector<pair<Vector2, Vector2>> walls ;
     vector<pair<Vector2, Vector2>> p_walls;
     GameState play_step(GameState game_state, char fase[CODE_SIZE], player &p);
