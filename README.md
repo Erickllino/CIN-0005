@@ -49,7 +49,7 @@ assets/
 │   └─ sounds/         # Efeitos sonoros do jogo
 
 external/raylib/       # Biblioteca Raylib (precisa ser compilada manualmente)
-Map_editor/            # Editor de mapas em Python (ferramenta auxiliar)
+Map_editor/            # Editor de mapas (ferramenta auxiliar)
 Makefile               # Script de build principal do projeto
 README.md              # Este arquivo
 FLIPERS.md             # Detalhes técnicos do sistema de flipers
