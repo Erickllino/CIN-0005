@@ -684,7 +684,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 ballVel = Sub(ballVel, Scale(normal, 2 * dot)); 
 
                 // Adiciona uma força extra ao refletir do bumper
-                float bumperForce = 3.0f; 
+                float bumperForce = 7.0f; 
                 ballVel = Add(ballVel, Scale(normal, bumperForce)); 
                 
                 ball.vx = ballVel.x;
@@ -888,7 +888,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         float r = b.radius;
 
         // Adiciona gravidade primeiro
-        if (!ballInLauncher) vel.y += 0.1f; 
+        if (!ballInLauncher) vel.y += 0.05f; 
         // Aplica movimento
         pos.x += vel.x;
         pos.y += vel.y;
@@ -948,7 +948,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             
             // Adiciona força extra se o fliper estiver sendo acionado
             if (leftFlipperPressed) {
-                Vector2 flipperForce = {(float)cos(leftAngleRad) * 3.0f, (float)sin(leftAngleRad) * 3.0f};
+                Vector2 flipperForce = {(float)cos(leftAngleRad) * 6.0f, (float)sin(leftAngleRad) * 6.0f};
                 vel = Add(vel, flipperForce);
             }
         }
@@ -962,7 +962,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             
             // Adiciona força extra se o fliper estiver sendo acionado
             if (rightFlipperPressed) {
-                Vector2 flipperForce = {(float)cos(rightAngleRad) * 3.0f, (float)sin(rightAngleRad) * 3.0f};
+                Vector2 flipperForce = {(float)cos(rightAngleRad) * 6.0f, (float)sin(rightAngleRad) * 6.0f};
                 vel = Add(vel, flipperForce);
             }
         }
@@ -996,8 +996,8 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         // Limita a velocidade baseado no tempo desde o lançamento
         if (ballWasLaunched && timeSinceLaunch < 1.0f) {
             // Primeiro segundo após lançamento: permite velocidade maior
-            vel.x = Clamp(vel.x, -12.0f, 12.0f);
-            vel.y = Clamp(vel.y, -30.0f, 12.0f);
+            vel.x = Clamp(vel.x, -6.0f, 6.0f);
+            vel.y = Clamp(vel.y, -12.0f, 12.0f);
         } else {
             // Velocidade normal após 1 segundo
             vel.x = Clamp(vel.x, -6.0f, 6.0f);
