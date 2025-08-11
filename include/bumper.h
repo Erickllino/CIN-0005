@@ -13,8 +13,7 @@ public:
     float hitTimer; // Tempo para o efeito de pulsação
     int scoreValue; // pontuacao do bumper
 
-    Bumper(const Bumper& other); //constructor de cópia
-    Bumper& operator=(const Bumper& other); // operador de atribuição
+    
     Bumper();
     Bumper(Vector2 pos, float r, Color c, int score);
 
