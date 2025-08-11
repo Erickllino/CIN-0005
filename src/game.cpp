@@ -10,14 +10,12 @@ float HOLE_WIDTH = 100.0f; // Largura do buraco na parede direita
 Game::Game(float width, float height) {
     screenWidth = width;
     screenHeight = height;
-    playTimer = 0.0f;
-    buttonPressTime = -1.0f;
 
 	//carrega textura
 	alienship = LoadTexture("assets/images/alienship.png");
 	alienPinball = LoadTexture("assets/images/alienpinball.png");
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
-
+	select_fundo = LoadTexture("assets/images/select_fundo1.png");
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
 
@@ -79,6 +77,7 @@ Game::~Game() {
 	UnloadTexture(alienship);
 	UnloadTexture(alienPinball);
 	UnloadTexture(pinballBall);
+    UnloadTexture(select_fundo);
     UnloadSound(bumperSound);
     UnloadSound(ball_collision);
 }
@@ -155,21 +154,35 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
         "- Grav Ball: reduz a gravidade",
         "- Tera Ball: bola aumentada",
         "- Duet Ball: invoca ate 4 bolas"
+
     };
 
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Selecione seu personagem", screenWidth / 2 - 150, 50, 20, WHITE);
+
+    float scaleX = (float)screenWidth * 0.8f / select_fundo.width;
+    float scaleY = (float)screenHeight * 0.8f / select_fundo.height;
+    float scale = fmaxf(scaleX, scaleY); 
+    Vector2 pos = { 
+        (screenWidth - select_fundo.width * scale) / 2.0f,
+        (screenHeight - select_fundo.height * scale) / 2.0f
+    };
+    DrawTextureEx(select_fundo, pos, 0.0f, scale, WHITE);
 
     Vector2 mousePos = GetMousePosition();
 
     for (int i = 0; i < numCharacters; i++) {
-        Rectangle btn = { screenWidth / 2 - 200, 100.0f + i * 70.0f, 400, 50 };
+        Rectangle btn = { screenWidth / 2 - 200, 250.0f + i * 70.0f, 400, 50 };
         bool hovered = CheckCollisionPointRec(mousePos, btn);
 
-        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : DARKGRAY);
-        DrawText(characterNames[i], btn.x + 10, btn.y + 10, 20, RED);
-        DrawText(characterPowers[i], btn.x + 110, btn.y + 10, 16, WHITE);
+
+        Color verdeagua = {43, 253, 175, 255};
+        Color vermelhobbd = {252, 16, 87, 255};
+        Color roxolegal = {171, 25, 111, 255};
+        DrawRectangleRounded(btn, 0.3, 0, hovered ? RAYWHITE : verdeagua);
+        DrawText(characterNames[i], btn.x + 10, btn.y + 15, 20, vermelhobbd);
+        DrawText(characterPowers[i], btn.x + 80, btn.y + 33, 16, roxolegal);
+
 
         if (hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             selectedCharacter = i;
@@ -476,6 +489,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     BeginDrawing();
     ClearBackground(BLACK);
 
+
     Music music;
     music = LoadMusicStream("assets/sounds/spacejam.mp3");
 
@@ -729,6 +743,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             balls.push_back(newBall);
         }
     }
+
     
     // Poder de redução da gravidade
     if (balls[0].characterId == 3) {
