@@ -3,8 +3,8 @@
 #include "game.h"
 
 // ajustado o tamanho da janela
-float screenWidth = 1280.0;
-float screenHeight = 800.0;
+float screenWidth = 1067.0f;
+float screenHeight = 800.0f ;
 
 
 int main() {
@@ -22,7 +22,6 @@ int main() {
   while (!WindowShouldClose()) {
 
     // Open menu
-    std::cout << "Fase: " << fase << std::endl;
     switch (game_state) {
       case Game::MENU:
         game_state = game.menu(game_state, fase, p);

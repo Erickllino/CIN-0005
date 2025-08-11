@@ -40,15 +40,15 @@ Game::Game(float width, float height) {
     walls = {
         {{0, 0}, {screenWidth, 0}},                    // Topo
         {{screenWidth, 0}, {screenWidth, screenHeight}},  // Direita
-        {{0, screenHeight}, {800.0f - HOLE_WIDTH, screenHeight}},  // Fundo esquerdo
-        {{800.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo direito
+        {{0, screenHeight}, {666.0f - HOLE_WIDTH, screenHeight}},  // Fundo esquerdo
+        {{666.0f + HOLE_WIDTH, screenHeight}, {screenWidth, screenHeight}},  // Fundo direito
         {{0, screenHeight}, {0, 0}}                    // Esquerda
     };
 
     // Inicializa variáveis dos flipers
     flipperLength = 90.0f;
-    leftFlipperPos = {700, screenHeight - 60.0f};
-    rightFlipperPos = {900, screenHeight - 60.0f};
+    leftFlipperPos = {566, screenHeight - 60.0f};
+    rightFlipperPos = {766, screenHeight - 60.0f};
     leftFlipperAngle = 30.0f;  // Ângulo inicial do fliper esquerdo (apontando para baixo-direita)
     rightFlipperAngle = 180.0f-30.0f;  // Ângulo inicial do fliper direito (apontando para baixo-esquerda)
     leftFlipperPressed = false;
@@ -56,10 +56,10 @@ Game::Game(float width, float height) {
 
     // Inicializa variáveis do lançador (plunger)
     launcherAreaWidth = 80.0f;
-    launcherAreaPos = {1125.0f, 350.0f};  // Movido mais para a esquerda
+    launcherAreaPos = {991.0f, 350.0f};  // Movido mais para a esquerda
     plungerWidth = 70.0f;  // Aumentado o tamanho
     plungerHeight = 20.0f;  // Aumentado o tamanho
-    plungerPos = {1140.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
+    plungerPos = {1006.0f, screenHeight - plungerHeight};  // Movido mais para a esquerda e mais para baixo
     plungerMaxPower = 100.0f;  // Força máxima do lançador
     plungerCurrentPower = 0.0f;
     plungerCharging = false;
@@ -116,8 +116,8 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
     BeginDrawing();
     ClearBackground(BLACK);
     
-    float scaleX = (float)screenWidth * 0.8f / menu_fundo.width;
-    float scaleY = (float)screenHeight * 0.8f / menu_fundo.height;
+    float scaleX = (float)screenWidth  / menu_fundo.width;
+    float scaleY = (float)screenHeight  / menu_fundo.height;
     float scale = fmaxf(scaleX, scaleY); 
     Vector2 pos = { 
         (screenWidth - menu_fundo.width * scale) / 2.0f,
@@ -228,8 +228,8 @@ Game::GameState Game::selectCharacter(GameState game_state, char fase[CODE_SIZE]
     BeginDrawing();
     ClearBackground(BLACK);
 
-    float scaleX = (float)screenWidth * 0.8f / select_fundo.width;
-    float scaleY = (float)screenHeight * 0.8f / select_fundo.height;
+    float scaleX = (float)screenWidth * 1.0f / select_fundo.width;
+    float scaleY = (float)screenHeight * 1.0f / select_fundo.height;
     float scale = fmaxf(scaleX, scaleY); 
     Vector2 pos = { 
         (screenWidth - select_fundo.width * scale) / 2.0f,
@@ -528,8 +528,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
         case 0:
             // Imagem da nave alienígena chegando (redimensionada para caber na tela)
             {
-                float scaleX = screenWidth * 0.8f / alienship.width;
-                float scaleY = screenHeight * 0.8f / alienship.height;
+                float scaleX = screenWidth * 1.0f / alienship.width;
+                float scaleY = screenHeight * 1.0f / alienship.height;
                 float scale = fminf(scaleX, scaleY); // Mantém proporção
                 Vector2 pos = {screenWidth / 2 - (alienship.width * scale) / 2, screenHeight / 2 - (alienship.height * scale) / 2};
                 DrawTextureEx(alienship, pos, 0.0f, scale, WHITE);
@@ -539,8 +539,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
         case 1:
             // Imagem dos aliens perto de um pinball (redimensionada para caber na tela)
             {
-                float scaleX = screenWidth * 0.8f / alienPinball.width;
-                float scaleY = screenHeight * 0.8f / alienPinball.height;
+                float scaleX = screenWidth * 1.0f / alienPinball.width;
+                float scaleY = screenHeight * 1.0f / alienPinball.height;
                 float scale = fminf(scaleX, scaleY); // Mantém proporção
                 Vector2 pos = {screenWidth / 2 - (alienPinball.width * scale) / 2, screenHeight / 2 - (alienPinball.height * scale) / 2};
                 DrawTextureEx(alienPinball, pos, 0.0f, scale, WHITE);
@@ -550,8 +550,8 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
         case 2:
             // Imagem de alguém virando uma bola de pinball (redimensionada para caber na tela)
             {
-                float scaleX = screenWidth * 0.8f / pinballBall.width;
-                float scaleY = screenHeight * 0.8f / pinballBall.height;
+                float scaleX = screenWidth * 1.0f / pinballBall.width;
+                float scaleY = screenHeight * 1.0f / pinballBall.height;
                 float scale = fminf(scaleX, scaleY); // Mantém proporção
                 Vector2 pos = {screenWidth / 2 - (pinballBall.width * scale) / 2, screenHeight / 2 - (pinballBall.height * scale) / 2};
                 DrawTextureEx(pinballBall, pos, 0.0f, scale, WHITE);
@@ -638,8 +638,8 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
 
     if (leBallActive)
     {
-        Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
-        Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+        Vector2 leBallWallStart = {666.0f - HOLE_WIDTH, screenHeight};
+        Vector2 leBallWallEnd = {666.0f + HOLE_WIDTH, screenHeight};
         DrawLineV(leBallWallStart, leBallWallEnd, PURPLE);
     }
     
@@ -911,8 +911,8 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
 
         // Colisão com a parede temporária do LeBall (se ativa)
         if (leBallActive) {
-            Vector2 leBallWallStart = {800.0f - HOLE_WIDTH, screenHeight};
-            Vector2 leBallWallEnd = {800.0f + HOLE_WIDTH, screenHeight};
+            Vector2 leBallWallStart = {666.0f - HOLE_WIDTH, screenHeight};
+            Vector2 leBallWallEnd = {666.0f + HOLE_WIDTH, screenHeight};
             Vector2 cp, normal;
             if (CheckCollisionCircleLine(pos, r, leBallWallStart, leBallWallEnd, cp, normal)) {
                 PlaySound(ball_collision);
@@ -980,7 +980,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             pos.y = r;
             vel.y *= -1;
         }
-        if (pos.y + r > screenHeight && (pos.x < 800.0f - HOLE_WIDTH || pos.x > 800.0f + HOLE_WIDTH)) {
+        if (pos.y + r > screenHeight && (pos.x < 666.0f - HOLE_WIDTH || pos.x > 666.0f + HOLE_WIDTH)) {
             pos.y = screenHeight - r;
             vel.y *= -1;
         }
