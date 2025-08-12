@@ -49,7 +49,8 @@ public:
         PAUSED,
         YOU_WIN,
         GAME_OVER,
-        CONTINUE_MENU
+        CONTINUE_MENU,
+        CREDITS
     };
     
     std::vector<player> balls;
@@ -101,6 +102,8 @@ public:
     void loadPhase(const GamePhase& phase, player& p);
     void restartMusic(); // Método para reiniciar a música
     GameState selectCharacter(GameState game_state, char fase[CODE_SIZE], player &p);
+
+    GameState credits(GameState game_state, char fase[CODE_SIZE], player &p);
 
 };
 

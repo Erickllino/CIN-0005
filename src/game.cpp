@@ -126,27 +126,27 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
     DrawTextureEx(menu_fundo, pos, 0.0f, scale, WHITE);
 
     // desenhando botoes de acordo com o fundo
-    float baseX = pos.x + (menu_fundo.width * scale);
-    float baseY = pos.y + (menu_fundo.height * scale);
+    float textureWidth = menu_fundo.width * scale;
+    float textureHeight = menu_fundo.height * scale;
     
     // botão "start" 
     Vector2 startcenter = {
-        baseX * 0.67f, 
-        baseY * 0.83f 
+        pos.x + textureWidth * 0.63f, 
+        pos.y + textureHeight * 0.835f 
     };
     float buttonRadius = 50.0f * scale; 
     
     // botão "select phase" 
     Vector2 selectPhaseCenter = {
-        baseX * 0.74f, 
-        baseY * 0.60f  
+        pos.x + textureWidth * 0.712f, 
+        pos.y + textureHeight * 0.58f  
     };
     float selectradius = 40.0f * scale;
     
     // Botão "credits" 
     Vector2 creditsCenter = {
-        baseX * 0.88f, 
-        baseY * 0.75f  
+        pos.x + textureWidth * 0.565f, 
+        pos.y + textureHeight * 0.63f  
     };
     float creditsRadius = 25.0f * scale; // a bola é menor
     
@@ -192,6 +192,19 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
     }
 
     //achando credits vai ser do mesmo jeito que os anteriores,
+    float distCredits = Length(Sub(mousePos, creditsCenter));
+
+    if (distCredits <= creditsRadius) {
+        DrawCircleV(creditsCenter, creditsRadius + 5, Fade(WHITE, 0.3f));
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            EndDrawing();
+            return CREDITS;
+        }
+    } else {
+        // Desenha botão normal
+        DrawCircleV(creditsCenter, creditsRadius, Fade(GRAY, 0.5f));
+    }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
         return GAME_OVER; // Sai do menu
@@ -581,6 +594,139 @@ Game::GameState Game::cinematic_step(GameState game_state, char fase[CODE_SIZE],
     return game_state;
 }
 
+
+Game::GameState Game::credits(GameState game_state, char fase[CODE_SIZE], player &p) {
+    static float creditsOffset = screenHeight; // Posição inicial dos créditos (fora da tela)
+    static bool creditsInitialized = false;
+    
+    // Inicializa os créditos quando entra na tela
+    if (!creditsInitialized) {
+        creditsOffset = screenHeight;
+        creditsInitialized = true;
+    }
+    
+    BeginDrawing();
+    ClearBackground(BLACK);
+    
+    // Velocidade de rolagem dos créditos
+    float scrollSpeed = 50.0f * GetFrameTime();
+    creditsOffset -= scrollSpeed;
+    
+    // Array com os textos dos créditos
+    const char* creditsText[] = {
+        "",
+        "",
+        "SPACEBALL ODYSSEY",
+        "",
+        "",
+        "O JOGO DO SECULO!",
+        "",
+        "PROJETO DA CADEIRA",
+        "FUNDAMENTOS DA PROGRAMAÇÃO",
+        "IMPERATIVA (CIN-0005)",
+        "",
+        "DESENVOLVIDO POR:",
+        "",
+        "IVAN",
+        "",
+        "HEIJI", 
+        "",
+        "JESSICA",
+        "",
+        "TUTUBAS",
+        "",
+        "HEITOR",
+        "",
+        "SAMIRA",
+        "",
+        "ERICK",
+        "",
+        "",
+        "PROGRAMAÇÃO:",
+        "Lógica dos flipers e física",
+        "Sistema de pontuação",
+        "Cinemáticas e narrativa",
+        "Design de fases",
+        "Interface e menus",
+        "",
+        "",
+        "ARTE E DESIGN:",
+        "Arte dos Menus",
+        "Mapas e cenários", 
+        "Interface visual do jogo",
+        "Efeitos visuais",
+        "",
+        "",
+        "ÁUDIO:",
+        "Efeitos sonoros",
+        "Música do jogo do Space Jam",
+        "",
+        "",
+        "AGRADECIMENTOS ESPECIAIS:",
+        "Ao professor",
+        "Aos Monitores",
+        "Corinthians e",
+        "Lebron James",
+        "",
+        "",
+        "OBRIGADO POR JOGAR!",
+        "",
+        "",
+        "Pressione ESC para voltar ao menu"
+    };
+    
+    int numLines = sizeof(creditsText) / sizeof(creditsText[0]);
+    int lineSpacing = 40;
+    
+    // Desenha cada linha dos créditos
+    for (int i = 0; i < numLines; i++) {
+        float yPos = creditsOffset + (i * lineSpacing);
+        
+        // Só desenha se estiver visível na tela
+        if (yPos > -lineSpacing && yPos < screenHeight + lineSpacing) {
+            int fontSize = 20;
+            Color textColor = WHITE;
+            
+            // Destaca o título principal
+            if (i == 2) { // "SPACEBALL ODYSSEY"
+                fontSize = 40;
+                textColor = YELLOW;
+            }
+            // Destaca subtítulos
+            else if (strstr(creditsText[i], ":") != NULL) {
+                fontSize = 24;
+                textColor = WHITE;
+            }
+            // Destaca nomes dos desenvolvedores
+            else if (i >= 13 && i <= 25 && strlen(creditsText[i]) > 0 && 
+                     strcmp(creditsText[i], "DESENVOLVIDO POR:") != 0) {
+                fontSize = 28;
+                textColor = GOLD;
+            }
+            
+            int textWidth = MeasureText(creditsText[i], fontSize);
+            int xPos = (screenWidth - textWidth) / 2;
+            
+            DrawText(creditsText[i], xPos, (int)yPos, fontSize, textColor);
+        }
+    }
+    
+    EndDrawing();
+    
+    // Verifica se os créditos terminaram (toda a lista passou pela tela)
+    if (creditsOffset < -(numLines * lineSpacing)) {
+        creditsInitialized = false; // Reset para próxima vez
+        return Game::MENU;
+    }
+    
+    // Permite sair a qualquer momento
+    if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_ENTER)) {
+        creditsInitialized = false; // Reset para próxima vez
+        return Game::MENU;
+    }
+    
+    return game_state;
+}
 
 // Função principal de jogo
 Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], player &p) {
