@@ -20,6 +20,10 @@ private:
 	Texture2D pinballBall;
     Texture2D menu_fundo;
     Texture2D select_fundo;
+    Texture2D score_fundo;
+    Texture2D bordastart;
+    Texture2D bordasel;
+    Texture2D bordacredits;
 
     Texture2D base_support; // Textura para o suporte da bola
     Texture2D erick_card;

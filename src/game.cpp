@@ -17,6 +17,10 @@ Game::Game(float width, float height) {
 	pinballBall = LoadTexture("assets/images/pinballBall.png");
 	menu_fundo = LoadTexture("assets/images/menu_fundo1.png");
 	select_fundo = LoadTexture("assets/images/select_fundo1.png");
+	score_fundo = LoadTexture("assets/images/scoreboard_fundo1.png");
+	bordasel = LoadTexture("assets/images/borda_select1.png");
+	bordastart = LoadTexture("assets/images/borda_start1.png");
+	bordacredits = LoadTexture("assets/images/borda_credits1.png");
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
 
@@ -112,6 +116,10 @@ Game::~Game() {
 	UnloadTexture(pinballBall);
 	UnloadTexture(menu_fundo);
     UnloadTexture(select_fundo);
+    UnloadTexture(score_fundo);
+    UnloadTexture(bordasel);
+    UnloadTexture(bordastart);
+    UnloadTexture(bordacredits);
     UnloadSound(bumperSound);
     UnloadSound(ball_collision);
     
@@ -171,6 +179,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
     if (diststart <= buttonRadius) {
         
         DrawCircleV(startcenter, buttonRadius + 5, Fade(WHITE, 0.3f));
+        DrawTextureEx(bordastart, pos, 0.0f, scale, WHITE);
 
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
                 p.score = 0; // reseta a pontuacao
@@ -182,7 +191,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
                 return CINEMATIC; // Muda para o estado cinematográfico
             }
     } else { 
-            DrawCircleV(startcenter, buttonRadius, Fade(GRAY, 0.5f));
+            DrawCircleV(startcenter, buttonRadius, Fade(GRAY, 0.0f));
     }
 
     // achando select
@@ -190,6 +199,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
 
     if (distSelectPhase <= selectradius) {
         DrawCircleV(selectPhaseCenter, selectradius + 5, Fade(WHITE, 0.3f));
+        DrawTextureEx(bordasel, pos, 0.0f, scale, WHITE);
         
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             EndDrawing();
@@ -197,7 +207,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
         }
     } else {
         // Desenha botão normal
-        DrawCircleV(selectPhaseCenter, selectradius, Fade(GRAY, 0.5f));
+        DrawCircleV(selectPhaseCenter, selectradius, Fade(GRAY, 0.0f));
     }
 
     //achando credits vai ser do mesmo jeito que os anteriores,
@@ -205,6 +215,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
 
     if (distCredits <= creditsRadius) {
         DrawCircleV(creditsCenter, creditsRadius + 5, Fade(WHITE, 0.3f));
+        DrawTextureEx(bordacredits, pos, 0.0f, scale, WHITE);
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             EndDrawing();
@@ -212,7 +223,7 @@ Game::GameState Game::menu(GameState game_state, char fase[CODE_SIZE], player &p
         }
     } else {
         // Desenha botão normal
-        DrawCircleV(creditsCenter, creditsRadius, Fade(GRAY, 0.5f));
+        DrawCircleV(creditsCenter, creditsRadius, Fade(GRAY, 0.0f));
     }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
@@ -379,8 +390,16 @@ Game::GameState Game::continue_menu(GameState game_state, char fase[CODE_SIZE], 
 Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], player &p) {
     BeginDrawing();
     ClearBackground(BLACK);
-    
-    DrawText("Scoreboard", screenWidth / 2 - 220, 220, 65, WHITE);
+
+    // Fundo
+    float scaleX = (float)screenWidth  / score_fundo.width;
+    float scaleY = (float)screenHeight  / score_fundo.height;
+    float scale = fmaxf(scaleX, scaleY); 
+    Vector2 pos = { 
+        (screenWidth - score_fundo.width * scale) / 2.0f,
+        (screenHeight - score_fundo.height * scale) / 2.0f
+    };
+    DrawTextureEx(score_fundo, pos, 0.0f, scale, WHITE);
 
     // Aliens:
     // - Ivison Rafael
@@ -478,7 +497,7 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
        } else {
            color = WHITE;
        }
-        DrawText(TextFormat("%d. %s: %d", i + 1, name, score), screenWidth / 2 - 250, 300 + i * 30, 20, color);
+        DrawText(TextFormat("%d. %s: %d", i + 1, name, score), screenWidth / 2 - 220, 300 + i * 30, 30, color);
    }
 
    // Aperte enter para continuar
@@ -512,8 +531,12 @@ Game::GameState Game::Scoreboard(GameState game_state, char fase[CODE_SIZE], pla
 Game::GameState Game::win_screen(GameState game_state, char fase[CODE_SIZE], player &p) {
 
     BeginDrawing();
-    ClearBackground(BLACK);
-    DrawText("Você venceu!", screenWidth / 2 - MeasureText("Você venceu!", 40) / 2, screenHeight / 2 - 20, 40, GREEN);
+    Color roxoescuro = {85, 39, 170, 255};
+    ClearBackground(roxoescuro);
+
+    Color verdeagua = {43, 253, 175, 255};
+
+    DrawText("Você venceu!", screenWidth / 2 - MeasureText("Você venceu!", 40) / 2, screenHeight / 2 - 20, 40, verdeagua);
     DrawText("Pressione ENTER para continuar", screenWidth / 2 - MeasureText("Pressione ENTER para continuar", 20) / 2, screenHeight / 2 + 30, 20, WHITE);
     EndDrawing();
 
@@ -528,7 +551,8 @@ Game::GameState Game::game_over_screen(GameState game_state, char fase[CODE_SIZE
 
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawText("Game Over", screenWidth / 2 - MeasureText("Game Over", 40) / 2, screenHeight / 2 - 20, 40, RED);
+    Color vermelhobbd = {252, 16, 87, 255};
+    DrawText("Game Over", screenWidth / 2 - MeasureText("Game Over", 40) / 2, screenHeight / 2 - 20, 40, vermelhobbd);
     DrawText("Pressione ENTER para continuar", screenWidth / 2 - MeasureText("Pressione ENTER para continuar", 20) / 2, screenHeight / 2 + 30, 20, WHITE);
     EndDrawing();
 
@@ -614,8 +638,9 @@ Game::GameState Game::credits(GameState game_state, char fase[CODE_SIZE], player
         creditsInitialized = true;
     }
     
+    Color azulesc = {39, 30, 112, 255};
     BeginDrawing();
-    ClearBackground(BLACK);
+    ClearBackground(azulesc);
     
     // Velocidade de rolagem dos créditos
     float scrollSpeed = 50.0f * GetFrameTime();
@@ -748,18 +773,13 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         SetMusicVolume(gameMusic, 0.5f);
         musicLoaded = true;
     }
-
-    // Desenha a imagem de suporte base (sempre visível) - por cima de tudo
-    float supportX = 0;
-    float supportY = 0; // Posiciona na parte inferior da tela
-    float supportScale = 0.25f;
     
 
     // Desenha a imagem do personagem baseada no characterId da primeira bola
     if (!balls.empty()) {
-        float characterX = 0; // Posição ao lado da imagem de suporte
-        float characterY = 0;
-        float characterScale = 0.25f;
+        float characterX = -19; // Posição ao lado da imagem de suporte
+        float characterY = -4;
+        float characterScale = 0.30f;
         
         switch (balls[0].characterId) {
             case 0:
@@ -785,19 +805,32 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
                 break;
         }
     }
-    DrawTextureEx(base_support, {supportX, supportY}, 0.0f, supportScale, WHITE);
+    
+    float scaleX = (float)screenWidth  / base_support.width;
+    float scaleY = (float)screenHeight  / base_support.height;
+    float scale = fmaxf(scaleX, scaleY); 
+    Vector2 pos = { 
+        (screenWidth - base_support.width * scale) / 2.0f,
+        (screenHeight - base_support.height * scale) / 2.0f
+    };
+    DrawTextureEx(base_support, pos, 0.0f, scale, WHITE); // base do suporte
+
     // Atualiza a música apenas uma vez por frame
     UpdateMusicStream(gameMusic);
+
+    //cores legais 
+    Color verdeagua = {43, 253, 175, 255};
+    Color vermelhobbd = {252, 16, 87, 255};
 
     // Bloco contagem de tempo
     playTimer += GetFrameTime();
     int totalSeconds = (int)playTimer;
     int minutes = totalSeconds / 60;
     int seconds = totalSeconds % 60;
-    DrawText(TextFormat("Tempo: %02d:%02d", minutes, seconds), 10, screenHeight-30, 20, WHITE);
+    DrawText(TextFormat("%02d:%02d", minutes, seconds), 135, screenHeight-30, 20, verdeagua);
 
     // exibe a pontuacao na pontuao
-    DrawText(TextFormat("Score: %d", p.score), 20, 10, 20, RED);
+    DrawText(TextFormat("%d", p.score), 80, 520, 50, verdeagua);
     
     if (balls.empty()) { // verifica se há bolas
         EndDrawing();
@@ -807,12 +840,12 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     // TODO: fazer com que as paredes sejam desenhadas de acordo com a fase
     // Desenha as paredes FIXAS (bordas da tela)
     for (auto &seg : walls) {
-        DrawLineV(seg.first, seg.second, RED);
+        DrawLineV(seg.first, seg.second, vermelhobbd);
     }
     
     // Desenha as paredes ESPECÍFICAS DA FASE
     for (auto &seg : p_walls) { 
-        DrawLineV(seg.first, seg.second, RED);
+        DrawLineV(seg.first, seg.second, vermelhobbd);
     }
 
     //verifica LeBall
@@ -832,7 +865,7 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
     {
         Vector2 leBallWallStart = {666.0f - HOLE_WIDTH, screenHeight};
         Vector2 leBallWallEnd = {666.0f + HOLE_WIDTH, screenHeight};
-        DrawLineV(leBallWallStart, leBallWallEnd, PURPLE);
+        DrawLineV(leBallWallStart, leBallWallEnd, verdeagua);
     }
     
 
@@ -1010,15 +1043,18 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
             leBallTimer = 10.0f; // Tempo que LeBall fica ativo
             leBallCooldown = 30.0f; // Tempo de recarga do LeBall
         }
+
+        Color verdeagua = {43, 253, 175, 255};
+        Color vermelhobbd = {252, 16, 87, 255};
         
         if (leBallActive){
-            DrawText(TextFormat("LeBall!: %.1fs", leBallTimer), 20, 40, 16, YELLOW);            
+            DrawText(TextFormat("LeBall!: %.1fs", leBallTimer), 30, 405, 16, verdeagua);            
         }
         else if (leBallCooldown > 0.0f) {
-            DrawText(TextFormat("LeBall disponivel em: %.1fs", leBallCooldown), 20, 40, 16, PURPLE);
+            DrawText(TextFormat("LeBall disponivel em: %.1fs", leBallCooldown), 30, 405, 16, verdeagua);
         }
         else {
-            DrawText("Pressione L para ativar LeBall!", 20, 40, 16, YELLOW);
+            DrawText("Pressione L para ativar LeBall!", 30, 405, 16, verdeagua);
         }
     }
     
