@@ -20,6 +20,15 @@ Game::Game(float width, float height) {
     bumperSound = LoadSound("assets/sounds/bumper.wav");
     ball_collision = LoadSound("assets/sounds/collision.wav");
 
+    // Carrega as imagens do play_step
+    base_support = LoadTexture("assets/images/cards/support_card.png");
+    erick_card = LoadTexture("assets/images/cards/erick_card.png");
+    heitor_card = LoadTexture("assets/images/cards/heitor_card.png");
+    ivan_card = LoadTexture("assets/images/cards/ivan_card.png");
+    jess_card = LoadTexture("assets/images/cards/jess_card.png");
+    leball_card = LoadTexture("assets/images/cards/leball_card.png");
+    sami_card = LoadTexture("assets/images/cards/sami_card.png");
+
     // Carrega a música do jogo apenas uma vez (com verificação robusta)
     gameMusic = LoadMusicStream("assets/sounds/spacejam.mp3");
     musicLoaded = false; // Flag para controlar quando iniciar a música
@@ -740,6 +749,43 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         musicLoaded = true;
     }
 
+    // Desenha a imagem de suporte base (sempre visível) - por cima de tudo
+    float supportX = 0;
+    float supportY = 0; // Posiciona na parte inferior da tela
+    float supportScale = 0.25f;
+    
+
+    // Desenha a imagem do personagem baseada no characterId da primeira bola
+    if (!balls.empty()) {
+        float characterX = 0; // Posição ao lado da imagem de suporte
+        float characterY = 0;
+        float characterScale = 0.25f;
+        
+        switch (balls[0].characterId) {
+            case 0:
+                DrawTextureEx(heitor_card, {characterX, characterY}, 0.0f, characterScale, WHITE);
+                break;
+            case 1:
+                DrawTextureEx(jess_card, {characterX, characterY}, 0.0f, characterScale, WHITE);
+                break;
+            case 2:
+                DrawTextureEx(leball_card, {characterX, characterY}, 0.0f, characterScale, WHITE);
+                break;
+            case 3:
+                DrawTextureEx(erick_card, {characterX, characterY}, 0.0f, characterScale, WHITE);
+                break;
+            case 4:
+                DrawTextureEx(sami_card, {characterX, characterY}, 0.0f, characterScale, WHITE);
+                break;
+            case 5:
+                DrawTextureEx(ivan_card, {characterX, characterY}, 0.0f, characterScale, WHITE);
+                break;
+            default:
+                // Se não houver um characterId válido, não desenha nada ou desenha uma imagem padrão
+                break;
+        }
+    }
+    DrawTextureEx(base_support, {supportX, supportY}, 0.0f, supportScale, WHITE);
     // Atualiza a música apenas uma vez por frame
     UpdateMusicStream(gameMusic);
 
@@ -1158,6 +1204,10 @@ Game::GameState Game::play_step(GameState game_state, char fase[CODE_SIZE], play
         
         b.draw();
     }
+
+    
+    
+
     EndDrawing();
     return game_state; // Retorna o estado do jogo
 }

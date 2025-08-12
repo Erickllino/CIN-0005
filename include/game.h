@@ -21,6 +21,15 @@ private:
     Texture2D menu_fundo;
     Texture2D select_fundo;
 
+    Texture2D base_support; // Textura para o suporte da bola
+    Texture2D erick_card;
+    Texture2D heitor_card;
+    Texture2D ivan_card;
+    Texture2D jess_card;
+    Texture2D leball_card;
+    Texture2D sami_card;
+
+
 	int frame;
 	float timer;
 	float frameDuration;
