@@ -61,7 +61,10 @@ int main() {
         }
         EndDrawing();
         break;
-        
+      case Game::CREDITS:
+        game_state = game.credits(game_state, fase, p);
+        break;
+
     }
 
     if (IsKeyPressed(KEY_M)) {
